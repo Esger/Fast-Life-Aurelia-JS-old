@@ -14,11 +14,23 @@ export class LifeWorkerService {
         this.ea = eventAggregator;
 
         this._lifeStack = [];
+        this.stackCheckHandle = null;
+        this.stackLowCheckHandle = null;
         this.wrkr = new Worker('./assets/life-worker.js');
         this.wrkr.onmessage = (e) => {
-            // push Generation on stack
-            if (e.data && e.data.cells) {
-                this._lifeStack.push(e.data.cells);
+            if (e.data) {
+                let message = e.data.message;
+                switch (message) {
+                    case 'newGeneration':
+                        // push Generation on stack
+                        this._lifeStack.push(e.data.cells);
+                        break;
+                    case 'ready':
+                        this.keepStack();
+                        break;
+                    default:
+                        break;
+                }
             }
             // this.ea.publish('newGeneration', e.data);
         };
@@ -28,24 +40,44 @@ export class LifeWorkerService {
         return this._lifeStack.shift();
     }
 
-    init(w, h, rules, generations, cells) {
+    init(w, h, rules, cells) {
+        this.rules = rules;
         let workerData = {
             message: 'start',
             w: w,
             h: h,
             rules: rules,
-            generations: generations,
+            generations: 50,
             cells: cells
         };
         this.wrkr.postMessage(workerData);
     }
 
-    // getDirection(player, targetPositions) {
-    //     this.mzWrkr.postMessage({
-    //         message: 'getDirection',
-    //         player: player,
-    //         targetPositions: targetPositions
-    //     });
-    // }
+    keepStack() {
+        this.stackCheckHandle = setInterval(() => {
+            if (this._lifeStack.length < 30) {
+                console.log('getBatch');
+                this.getBatch();
+                clearInterval(this.stackCheckHandle);
+            }
+        }, 500);
+    }
+
+    stop() {
+        let workerData = {
+            message: 'stop',
+        };
+        this.wrkr.postMessage(workerData);
+    }
+
+    getBatch(cells) {
+        let workerData = {
+            message: 'resume',
+            rules: this.rules,
+            generations: 10,
+            cells: cells
+        };
+        this.wrkr.postMessage(workerData);
+    }
 
 }

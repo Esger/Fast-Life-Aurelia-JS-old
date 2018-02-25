@@ -28,6 +28,17 @@ var conway = {
         conway.liveCells = cells || conway.fillRandom();
     },
 
+    resume: function (rules, generations, cells) {
+        conway.generations = generations || 10;
+        conway.lifeSteps = 0;
+        conway.rules = rules || [];
+        conway.cells = cells || [];
+    },
+
+    stop: function () {
+        clearInterval(conway.gogogo);
+    },
+
     // Put new pair of values in array
     celXY: function (x, y) {
         let cell = {
@@ -39,7 +50,7 @@ var conway = {
 
     // Fill livecells with random cellxy's
     fillRandom: function () {
-        // let self = this;
+
         const count = conway.startnumberLivecells;
         let i = 0;
         let cells = [];
@@ -51,7 +62,7 @@ var conway = {
 
     // Set all neighbours to zero
     zeroNeighbours: function () {
-        // let self = this;
+
         const count = conway.numberCells;
         let i = 0;
         for (; i < count; i += 1) {
@@ -61,7 +72,7 @@ var conway = {
 
     // Tell neighbours around livecells they have a neighbour
     countNeighbours: function () {
-        // let self = this;
+
         const count = conway.liveCells.length;
         const maxNeighbour = 2;
         let i = 0;
@@ -81,7 +92,7 @@ var conway = {
 
     // Evaluate neighbourscounts for new livecells
     evalNeighbours: function () {
-        // let self = this;
+
 
         function livecell() {
             let y = Math.floor(i / conway.spaceWidth);
@@ -100,7 +111,7 @@ var conway = {
     },
 
     addNewLifeCells: function () {
-        // let self = this;
+
         if (conway.newLifeCells.length) {
             conway.liveCells = conway.liveCells.concat(conway.newLifeCells);
             conway.newLifeCells = [];
@@ -108,7 +119,6 @@ var conway = {
     },
 
     sendScreen: function () {
-        // let self = this;
         let workerData = {
             message: 'newGeneration',
             cells: conway.liveCells
@@ -116,17 +126,26 @@ var conway = {
         postMessage(workerData);
     },
 
+    sendReady: function () {
+        let workerData = {
+            message: 'ready',
+        };
+        postMessage(workerData);
+    },
+
     // Animation function
     bugLifeStep: function () {
         conway.lifeSteps += 1;
-        console.log(conway.lifeSteps);
         if (conway.lifeSteps < conway.generations) {
             conway.zeroNeighbours();
             conway.countNeighbours();
             conway.evalNeighbours();
             conway.sendScreen();
+            console.log('steps ', conway.lifeSteps);
         } else {
             clearInterval(conway.gogogo);
+            conway.sendReady();
+            console.log('ready ');
         }
         // conway.addNewLifeCells();
     },
@@ -144,6 +163,13 @@ onmessage = function (e) {
         switch (message) {
             case 'start':
                 conway.ignite(data.w, data.h, data.rules, data.generations, data.cells);
+                conway.burst();
+                break;
+            case 'stop':
+                conway.stop();
+                break;
+            case 'resume':
+                conway.resume(data.rules, data.generations, data.cells);
                 conway.burst();
                 break;
             default:

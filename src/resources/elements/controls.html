@@ -1,4 +1,5 @@
 <template>
+    <require from="resources/elements/stats"></require>
     <life-controls>
         <a href="#"
            class="clearbutton"
@@ -21,10 +22,11 @@
            title="Random"
            click.delegate="random()"></a>
         <label>
-            <input 
-                class="trails" 
-                type="checkbox" 
-                checked.bind="trails"
-                click.delegate="toggleTrails()" /> Trails</label>
+        <input 
+        class="trails" 
+        type="checkbox" 
+        checked.bind="trails"
+        click.delegate="toggleTrails()" /> Trails</label>
     </life-controls>
+    <stats></stats>
 </template>

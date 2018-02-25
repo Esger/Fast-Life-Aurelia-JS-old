@@ -1,31 +1,29 @@
 import {
-    inject,
-    bindable
+    inject
 } from 'aurelia-framework';
-// import {
-//     EventAggregator
-// } from 'aurelia-event-aggregator';
-
-// @inject(EventAggregator)
-
-
+import {
+    EventAggregator
+} from 'aurelia-event-aggregator';
 import { LifeWorkerService } from 'resources/services/life-worker-service';
 
-@inject(LifeWorkerService)
+@inject(EventAggregator, LifeWorkerService)
 export class LifeCustomElement {
 
     // TODO try this https://hacks.mozilla.org/2011/12/faster-canvas-pixel-manipulation-with-typed-arrays/
-    constructor(lifeWorkerService) {
+    constructor(eventAggregator, lifeWorkerService) {
+        this.ea = eventAggregator;
         this.lfWs = lifeWorkerService;
         this.cellSize = 1;
         this.cellsAlive = 0;
         this.fillRatio = 20;
         this.trails = true;
+        this.speedHandle = null;
     }
 
-    calcSpeed() {
+    countGenerations() {
         this.speed = this.lifeSteps - this.prevSteps;
         this.prevSteps = this.lifeSteps;
+        this.ea.publish('speed', this.speed);
     }
 
     clearSpace() {
@@ -79,13 +77,25 @@ export class LifeCustomElement {
         ];
         this.lifeSteps = 0; // Number of iterations / steps done
         this.prevSteps = 0;
-        let generations = 500;
-        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, generations);
-        requestAnimationFrame(() => { this.drawFromStack(); });
+        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
+        this.drawFromStack();
+        this.speedHandle = setInterval(() => { this.countGenerations(); }, 1000);
+    }
+
+    addListeners() {
+        this.ea.subscribe('startRandom', () => {
+            this.initLife();
+        });
+        this.ea.subscribe('stop', () => {
+            this.lfWs.stop();
+        });
+        this.ea.subscribe('step', () => {
+            this.lfWs.getBatch();
+        });
     }
 
     attached() {
-        // this.initLife();
+        this.addListeners();
     }
 
 

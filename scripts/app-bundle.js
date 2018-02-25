@@ -97,7 +97,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'resources/ser
             _classCallCheck(this, LifeCustomElement);
 
             this.lfWs = lifeWorkerService;
-            this.cellSize = 2;
+            this.cellSize = 1;
             this.cellsAlive = 0;
             this.fillRatio = 20;
             this.trails = true;
@@ -168,9 +168,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'resources/ser
             });
         };
 
-        LifeCustomElement.prototype.attached = function attached() {
-            this.initLife();
-        };
+        LifeCustomElement.prototype.attached = function attached() {};
 
         return LifeCustomElement;
     }()) || _class);
@@ -265,7 +263,64 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         return LifeWorkerService;
     }()) || _class);
 });
+define('resources/elements/controls',['exports', 'aurelia-framework', 'aurelia-event-aggregator'], function (exports, _aureliaFramework, _aureliaEventAggregator) {
+    'use strict';
+
+    Object.defineProperty(exports, "__esModule", {
+        value: true
+    });
+    exports.ControlsCustomElement = undefined;
+
+    function _classCallCheck(instance, Constructor) {
+        if (!(instance instanceof Constructor)) {
+            throw new TypeError("Cannot call a class as a function");
+        }
+    }
+
+    var _dec, _class;
+
+    var ControlsCustomElement = exports.ControlsCustomElement = (_dec = (0, _aureliaFramework.inject)(_aureliaEventAggregator.EventAggregator), _dec(_class = function () {
+        function ControlsCustomElement(eventAggregator) {
+            _classCallCheck(this, ControlsCustomElement);
+
+            this.ea = eventAggregator;
+            this.trails = false;
+        }
+
+        ControlsCustomElement.prototype.clear = function clear() {
+            this.ea.publish('clear');
+        };
+
+        ControlsCustomElement.prototype.continue = function _continue() {
+            this.ea.publish('continue');
+        };
+
+        ControlsCustomElement.prototype.random = function random() {
+            this.ea.publish('startRandom');
+        };
+
+        ControlsCustomElement.prototype.start = function start() {
+            this.ea.publish('start');
+        };
+
+        ControlsCustomElement.prototype.step = function step() {
+            this.ea.publish('step');
+        };
+
+        ControlsCustomElement.prototype.stop = function stop() {
+            this.ea.publish('stop');
+        };
+
+        ControlsCustomElement.prototype.toggleTrails = function toggleTrails() {
+            this.trails = !this.trails;
+            this.ea.publish('toggleTrails', this.trails);
+        };
+
+        return ControlsCustomElement;
+    }()) || _class);
+});
 define('text!app.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/main\"></require>\n    <main></main>\n</template>"; });
 define('text!resources/elements/life.html', ['module'], function(module) { module.exports = "<template>\n    <canvas id=\"life\"\n            width=\"750\"\n            height=\"464\">\n    </canvas>\n</template>"; });
-define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <h1>Fast Life</h1>\n    <life></life>\n</template>"; });
+define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <require from=\"resources/elements/controls\"></require>\n    <h1>Fast Life</h1>\n    <life></life>\n    <controls></controls>\n</template>"; });
+define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"randombutton\"\n           title=\"Random\"\n           click.delegate=\"random()\"></a>\n        <label>\n            <input \n                class=\"trails\" \n                type=\"checkbox\" \n                checked.bind=\"trails\"\n                click.delegate=\"toggleTrails()\" /> Trails</label>\n    </life-controls>\n</template>"; });
 //# sourceMappingURL=app-bundle.js.map

@@ -17,7 +17,7 @@ export class LifeCustomElement {
     // TODO try this https://hacks.mozilla.org/2011/12/faster-canvas-pixel-manipulation-with-typed-arrays/
     constructor(lifeWorkerService) {
         this.lfWs = lifeWorkerService;
-        this.cellSize = 2;
+        this.cellSize = 1;
         this.cellsAlive = 0;
         this.fillRatio = 20;
         this.trails = true;
@@ -85,7 +85,7 @@ export class LifeCustomElement {
     }
 
     attached() {
-        this.initLife();
+        // this.initLife();
     }
 
 

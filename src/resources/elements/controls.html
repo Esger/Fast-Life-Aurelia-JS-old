@@ -1,0 +1,30 @@
+<template>
+    <life-controls>
+        <a href="#"
+           class="clearbutton"
+           title="Clear"
+           click.delegate="clear()"></a>
+        <a href="#"
+           class="startbutton"
+           title="Start"
+           click.delegate="start()"></a>
+        <a href="#"
+           class="stopbutton"
+           title="Stop"
+           click.delegate="stop()"></a>
+        <a href="#"
+           class="stepbutton"
+           title="Step"
+           click.delegate="step()"></a>
+        <a href="#"
+           class="randombutton"
+           title="Random"
+           click.delegate="random()"></a>
+        <label>
+            <input 
+                class="trails" 
+                type="checkbox" 
+                checked.bind="trails"
+                click.delegate="toggleTrails()" /> Trails</label>
+    </life-controls>
+</template>

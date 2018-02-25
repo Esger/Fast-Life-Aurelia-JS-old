@@ -110,6 +110,56 @@ body {
   justify-content: space-around;
   font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
+controls {
+  display: flex;
+  justify-content: space-between;
+}
+controls life-controls {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+controls life-controls a {
+  width: 24px;
+  height: 21px;
+  background-image: url("buttons.gif");
+  background-repeat: no-repeat;
+}
+controls life-controls label {
+  font-size: 14px;
+}
+controls life-controls .clearbutton {
+  background-position: 0 -25px;
+}
+controls life-controls .clearbutton:hover {
+  background-position: -50px -25px;
+}
+controls life-controls .startbutton {
+  width: 38px;
+  background-position: 0 -99px;
+}
+controls life-controls .startbutton:hover {
+  background-position: -50px -99px;
+}
+controls life-controls .stopbutton {
+  background-position: 0 0;
+}
+controls life-controls .stopbutton:hover {
+  background-position: -50px 0;
+}
+controls life-controls .stepbutton {
+  background-position: 0 -49px;
+}
+controls life-controls .stepbutton:hover {
+  background-position: -50px -49px;
+}
+controls life-controls .randombutton {
+  margin-right: 20px;
+  background-position: 0 -125px;
+}
+controls life-controls .randombutton:hover {
+  background-position: -50px -125px;
+}
 life {
   display: block;
   margin: 18px 0;

@@ -23,7 +23,10 @@ export class LifeCustomElement {
     countGenerations() {
         this.speed = this.lifeSteps - this.prevSteps;
         this.prevSteps = this.lifeSteps;
-        this.ea.publish('speed', this.speed);
+        this.ea.publish('stats', {
+            speed: this.speed,
+            stackSize: this.lfWs.stackSize
+        });
     }
 
     clearSpace() {
@@ -52,10 +55,11 @@ export class LifeCustomElement {
     drawFromStack() {
         let cells = this.lfWs.cells;
         if (cells) {
+            this.lifeSteps += 1;
             this.fadeCells();
             this.drawCells(cells);
         }
-        requestAnimationFrame(() => { this.drawFromStack(); });
+        setTimeout(() => { this.drawFromStack(); });
     }
 
     initLife() {
@@ -77,7 +81,7 @@ export class LifeCustomElement {
         ];
         this.lifeSteps = 0; // Number of iterations / steps done
         this.prevSteps = 0;
-        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
+        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, this.cellSize);
         this.drawFromStack();
         this.speedHandle = setInterval(() => { this.countGenerations(); }, 1000);
     }

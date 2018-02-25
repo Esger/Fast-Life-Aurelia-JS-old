@@ -40,27 +40,33 @@ export class LifeWorkerService {
         return this._lifeStack.shift();
     }
 
-    init(w, h, rules, cells) {
+    get stackSize() {
+        return this._lifeStack.length;
+    }
+
+    init(w, h, rules, cellSize, cells) {
         this.rules = rules;
+        this.cellSize = cellSize;
         let workerData = {
             message: 'start',
             w: w,
             h: h,
             rules: rules,
-            generations: 50,
+            generations: 5 * this.cellSize,
             cells: cells
         };
         this.wrkr.postMessage(workerData);
     }
 
     keepStack() {
+        let minStackSize = 5 * this.cellSize;
         this.stackCheckHandle = setInterval(() => {
-            if (this._lifeStack.length < 30) {
+            if (this._lifeStack.length < minStackSize) {
                 console.log('getBatch');
                 this.getBatch();
                 clearInterval(this.stackCheckHandle);
             }
-        }, 500);
+        });
     }
 
     stop() {
@@ -74,7 +80,7 @@ export class LifeWorkerService {
         let workerData = {
             message: 'resume',
             rules: this.rules,
-            generations: 10,
+            generations: 5 * this.cellSize,
             cells: cells
         };
         this.wrkr.postMessage(workerData);

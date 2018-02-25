@@ -11,11 +11,13 @@ export class StatsCustomElement {
     constructor(eventAggregator) {
         this.ea = eventAggregator;
         this.speed = 0;
+        this.stackSize = 0;
     }
 
     addListeners() {
-        this.ea.subscribe('speed', response => {
+        this.ea.subscribe('stats', response => {
             this.speed = response.speed;
+            this.stackSize = response.stackSize;
         });
     }
 

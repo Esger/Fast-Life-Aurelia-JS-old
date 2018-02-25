@@ -141,11 +141,11 @@ var conway = {
             conway.countNeighbours();
             conway.evalNeighbours();
             conway.sendScreen();
-            console.log('steps ', conway.lifeSteps);
+            // console.log('steps ', conway.lifeSteps);
         } else {
             clearInterval(conway.gogogo);
             conway.sendReady();
-            console.log('ready ');
+            // console.log('ready ');
         }
         // conway.addNewLifeCells();
     },

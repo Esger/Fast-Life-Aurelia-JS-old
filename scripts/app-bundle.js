@@ -114,19 +114,20 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'resources/ser
         };
 
         LifeCustomElement.prototype.drawCells = function drawCells(cells) {
-            this.ctx.fillStyle = "rgb(128, 128, 0)";
+            this.ctxOffscreen.fillStyle = "rgb(128, 128, 0)";
             var count = cells.length;
             var i = 0;
             for (; i < count; i += 1) {
-                this.ctx.fillRect(cells[i].x * this.cellSize, cells[i].y * this.cellSize, this.cellSize, this.cellSize);
+                this.ctxOffscreen.fillRect(cells[i].x * this.cellSize, cells[i].y * this.cellSize, this.cellSize, this.cellSize);
             }
+            this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
             this.cellsAlive = cells.length;
         };
 
         LifeCustomElement.prototype.fadeCells = function fadeCells() {
             var opacity = this.trails * 1 * 0.5;
-            this.ctx.fillStyle = "rgba(255, 255, 255, " + opacity + ")";
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctxOffscreen.fillStyle = "rgba(255, 255, 255, " + opacity + ")";
+            this.ctxOffscreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
         };
 
         LifeCustomElement.prototype.drawFromStack = function drawFromStack() {
@@ -151,6 +152,12 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'resources/ser
             this.canvasHeight = this.canvas.height;
             this.spaceWidth = Math.floor(this.canvasWidth / this.cellSize);
             this.spaceHeight = Math.floor(this.canvasHeight / this.cellSize);
+
+            this.offScreenCanvas = document.createElement('canvas');
+            this.offScreenCanvas.width = this.canvasWidth;
+            this.offScreenCanvas.height = this.canvasHeight;
+            this.ctxOffscreen = this.offScreenCanvas.getContext('2d');
+
             this.liferules = [false, false, false, true, false, false, false, false, false, false, false, false, true, true, false, false, false, false, false];
             this.lifeSteps = 0;
             this.prevSteps = 0;

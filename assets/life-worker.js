@@ -15,16 +15,16 @@ var conway = {
     walkers: [],
 
     ignite: function (w, h, rules, cells) {
-        this.spaceWidth = w;
-        this.spaceHeight = h;
-        this.liferules = rules;
-        this.numberCells = this.spaceWidth * this.spaceHeight;
-        this.startnumberLivecells = this.numberCells * this.fillRatio / 100;
-        this.cellsAlive = this.startnumberLivecells;
-        this.liveCells = [];
-        this.newLifeCells = [];
-        this.neighbours = [];
-        this.liveCells = cells || this.fillRandom();
+        conway.spaceWidth = w;
+        conway.spaceHeight = h;
+        conway.liferules = rules;
+        conway.numberCells = conway.spaceWidth * conway.spaceHeight;
+        conway.startnumberLivecells = conway.numberCells * conway.fillRatio / 100;
+        conway.cellsAlive = conway.startnumberLivecells;
+        conway.liveCells = [];
+        conway.newLifeCells = [];
+        conway.neighbours = [];
+        conway.liveCells = cells || conway.fillRandom();
     },
 
     // Put new pair of values in array
@@ -88,11 +88,11 @@ var conway = {
             conway.liveCells.push(conway.celXY(x, y));
         }
 
-        this.liveCells = [];
-        const count = this.numberCells;
+        conway.liveCells = [];
+        const count = conway.numberCells;
         let i = 0;
         for (; i < count; i += 1) {
-            if (this.liferules[this.neighbours[i]]) {
+            if (conway.liferules[conway.neighbours[i]]) {
                 livecell();
             }
         }
@@ -118,6 +118,10 @@ var conway = {
     // Animation function
     bugLifeStep: function () {
         conway.lifeSteps += 1;
+        console.log(conway.lifeSteps);
+        if (conway.lifeSteps > 100) {
+            clearInterval(conway.gogogo);
+        }
         // conway.addNewLifeCells();
         conway.zeroNeighbours();
         conway.countNeighbours();
@@ -126,7 +130,7 @@ var conway = {
     },
 
     burst: function () {
-        this.gogogo = setInterval(this.bugLifeStep);
+        conway.gogogo = setInterval(conway.bugLifeStep);
     },
 
 };

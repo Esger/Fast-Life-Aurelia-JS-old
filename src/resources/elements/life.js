@@ -79,7 +79,8 @@ export class LifeCustomElement {
         ];
         this.lifeSteps = 0; // Number of iterations / steps done
         this.prevSteps = 0;
-        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
+        let generations = 500;
+        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, generations);
         requestAnimationFrame(() => { this.drawFromStack(); });
     }
 

@@ -14,10 +14,11 @@ var conway = {
     prevSteps: 0,
     walkers: [],
 
-    ignite: function (w, h, rules, cells) {
+    ignite: function (w, h, rules, generations, cells) {
         conway.spaceWidth = w;
         conway.spaceHeight = h;
         conway.liferules = rules;
+        conway.generations = generations;
         conway.numberCells = conway.spaceWidth * conway.spaceHeight;
         conway.startnumberLivecells = conway.numberCells * conway.fillRatio / 100;
         conway.cellsAlive = conway.startnumberLivecells;
@@ -119,14 +120,15 @@ var conway = {
     bugLifeStep: function () {
         conway.lifeSteps += 1;
         console.log(conway.lifeSteps);
-        if (conway.lifeSteps > 100) {
+        if (conway.lifeSteps < conway.generations) {
+            conway.zeroNeighbours();
+            conway.countNeighbours();
+            conway.evalNeighbours();
+            conway.sendScreen();
+        } else {
             clearInterval(conway.gogogo);
         }
         // conway.addNewLifeCells();
-        conway.zeroNeighbours();
-        conway.countNeighbours();
-        conway.evalNeighbours();
-        conway.sendScreen();
     },
 
     burst: function () {
@@ -141,7 +143,7 @@ onmessage = function (e) {
         let data = e.data;
         switch (message) {
             case 'start':
-                conway.ignite(data.w, data.h, data.rules, data.cells);
+                conway.ignite(data.w, data.h, data.rules, data.generations, data.cells);
                 conway.burst();
                 break;
             default:

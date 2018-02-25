@@ -161,7 +161,8 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'resources/ser
             this.liferules = [false, false, false, true, false, false, false, false, false, false, false, false, true, true, false, false, false, false, false];
             this.lifeSteps = 0;
             this.prevSteps = 0;
-            this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
+            var generations = 500;
+            this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, generations);
             requestAnimationFrame(function () {
                 _this2.drawFromStack();
             });
@@ -242,12 +243,13 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             };
         }
 
-        LifeWorkerService.prototype.init = function init(w, h, rules, cells) {
+        LifeWorkerService.prototype.init = function init(w, h, rules, generations, cells) {
             var workerData = {
                 message: 'start',
                 w: w,
                 h: h,
                 rules: rules,
+                generations: generations,
                 cells: cells
             };
             this.wrkr.postMessage(workerData);

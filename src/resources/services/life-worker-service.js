@@ -28,12 +28,13 @@ export class LifeWorkerService {
         return this._lifeStack.shift();
     }
 
-    init(w, h, rules, cells) {
+    init(w, h, rules, generations, cells) {
         let workerData = {
             message: 'start',
             w: w,
             h: h,
             rules: rules,
+            generations: generations,
             cells: cells
         };
         this.wrkr.postMessage(workerData);

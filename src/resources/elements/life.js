@@ -18,13 +18,14 @@ export class LifeCustomElement {
         this.fillRatio = 20;
         this.trails = true;
         this.speedHandle = null;
+        this.opacity = this.trails * 1 * 0.5;
     }
 
     countGenerations() {
         this.speed = this.lifeSteps - this.prevSteps;
         this.prevSteps = this.lifeSteps;
         this.ea.publish('stats', {
-            speed: this.speed,
+            speed: this.speed * 2,
             stackSize: this.lfWs.stackSize
         });
     }
@@ -34,30 +35,25 @@ export class LifeCustomElement {
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
-    // TODO draw on second canvas, then put that on the visible canvas
     drawCells(cells) {
-        this.ctxOffscreen.fillStyle = "rgb(128, 128, 0)";
         const count = cells.length;
         let i = 0;
         for (; i < count; i += 1) {
+            // this.ctx.fillStyle = (cells[i].alive) ? "rgba(128, 128, 0, 1)" : "rgba(255, 255, 255, " + this.opacity + ")";
+            this.ctxOffscreen.fillStyle = (cells[i].alive) ? "rgba(128, 128, 0, 1)" : "rgba(255, 255, 255, 1)";
             this.ctxOffscreen.fillRect(cells[i].x * this.cellSize, cells[i].y * this.cellSize, this.cellSize, this.cellSize);
+            // this.ctxOffscreen.fillStyle = (cells[i].alive) ? "rgba(128, 128, 0, 1)" : "rgba(255, 255, 255, " + this.opacity + ")";
+            // this.ctxOffscreen.fillRect(cells[i].x * this.cellSize, cells[i].y * this.cellSize, this.cellSize, this.cellSize);
         }
         this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
         this.cellsAlive = cells.length;
     }
 
-    fadeCells() {
-        let opacity = this.trails * 1 * 0.5;
-        this.ctxOffscreen.fillStyle = "rgba(255, 255, 255, " + opacity + ")";
-        this.ctxOffscreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    }
-
     drawFromStack() {
         let cells = this.lfWs.cells;
         if (cells) {
-            this.lifeSteps += 1;
-            this.fadeCells();
             this.drawCells(cells);
+            this.lifeSteps += 1;
         }
         setTimeout(() => { this.drawFromStack(); });
     }
@@ -76,14 +72,15 @@ export class LifeCustomElement {
         this.ctxOffscreen = this.offScreenCanvas.getContext('2d');
 
         this.liferules = [
-            false, false, false, true, false, false, false, false, false, false,
+            false, false, false, true, false, false, false, false, false,
             false, false, true, true, false, false, false, false, false
         ];
+        this.changeIndicators = [3, 10, 11, 14, 16, 17, 18];
         this.lifeSteps = 0; // Number of iterations / steps done
         this.prevSteps = 0;
         this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, this.cellSize);
         this.drawFromStack();
-        this.speedHandle = setInterval(() => { this.countGenerations(); }, 1000);
+        this.speedHandle = setInterval(() => { this.countGenerations(); }, 500);
     }
 
     addListeners() {
@@ -95,6 +92,9 @@ export class LifeCustomElement {
         });
         this.ea.subscribe('step', () => {
             this.lfWs.getBatch();
+        });
+        this.ea.subscribe('toggleTrails', () => {
+            this.trails = !this.trails;
         });
     }
 

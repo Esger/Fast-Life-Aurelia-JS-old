@@ -159,13 +159,14 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.fillRatio = 20;
             this.trails = true;
             this.speedHandle = null;
+            this.opacity = this.trails * 1 * 0.5;
         }
 
         LifeCustomElement.prototype.countGenerations = function countGenerations() {
             this.speed = this.lifeSteps - this.prevSteps;
             this.prevSteps = this.lifeSteps;
             this.ea.publish('stats', {
-                speed: this.speed,
+                speed: this.speed * 2,
                 stackSize: this.lfWs.stackSize
             });
         };
@@ -176,20 +177,14 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         };
 
         LifeCustomElement.prototype.drawCells = function drawCells(cells) {
-            this.ctxOffscreen.fillStyle = "rgb(128, 128, 0)";
             var count = cells.length;
             var i = 0;
             for (; i < count; i += 1) {
+                this.ctxOffscreen.fillStyle = cells[i].alive ? "rgba(128, 128, 0, 1)" : "rgba(255, 255, 255, 1)";
                 this.ctxOffscreen.fillRect(cells[i].x * this.cellSize, cells[i].y * this.cellSize, this.cellSize, this.cellSize);
             }
             this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
             this.cellsAlive = cells.length;
-        };
-
-        LifeCustomElement.prototype.fadeCells = function fadeCells() {
-            var opacity = this.trails * 1 * 0.5;
-            this.ctxOffscreen.fillStyle = "rgba(255, 255, 255, " + opacity + ")";
-            this.ctxOffscreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
         };
 
         LifeCustomElement.prototype.drawFromStack = function drawFromStack() {
@@ -197,9 +192,8 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
 
             var cells = this.lfWs.cells;
             if (cells) {
-                this.lifeSteps += 1;
-                this.fadeCells();
                 this.drawCells(cells);
+                this.lifeSteps += 1;
             }
             setTimeout(function () {
                 _this.drawFromStack();
@@ -221,14 +215,15 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.offScreenCanvas.height = this.canvasHeight;
             this.ctxOffscreen = this.offScreenCanvas.getContext('2d');
 
-            this.liferules = [false, false, false, true, false, false, false, false, false, false, false, false, true, true, false, false, false, false, false];
+            this.liferules = [false, false, false, true, false, false, false, false, false, false, false, true, true, false, false, false, false, false];
+            this.changeIndicators = [3, 10, 11, 14, 16, 17, 18];
             this.lifeSteps = 0;
             this.prevSteps = 0;
             this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, this.cellSize);
             this.drawFromStack();
             this.speedHandle = setInterval(function () {
                 _this2.countGenerations();
-            }, 1000);
+            }, 500);
         };
 
         LifeCustomElement.prototype.addListeners = function addListeners() {
@@ -242,6 +237,9 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             });
             this.ea.subscribe('step', function () {
                 _this3.lfWs.getBatch();
+            });
+            this.ea.subscribe('toggleTrails', function () {
+                _this3.trails = !_this3.trails;
             });
         };
 
@@ -353,6 +351,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             this.ea = eventAggregator;
 
             this._lifeStack = [];
+            this.batchMultiplier = 100;
             this.stackCheckHandle = null;
             this.stackLowCheckHandle = null;
             this.wrkr = new Worker('./assets/life-worker.js');
@@ -376,12 +375,13 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         LifeWorkerService.prototype.init = function init(w, h, rules, cellSize, cells) {
             this.rules = rules;
             this.cellSize = cellSize;
+            this.batchSize = this.batchMultiplier * this.cellSize;
             var workerData = {
                 message: 'start',
                 w: w,
                 h: h,
                 rules: rules,
-                generations: 5 * this.cellSize,
+                generations: this.batchSize,
                 cells: cells
             };
             this.wrkr.postMessage(workerData);
@@ -390,14 +390,13 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         LifeWorkerService.prototype.keepStack = function keepStack() {
             var _this2 = this;
 
-            var minStackSize = 5 * this.cellSize;
             this.stackCheckHandle = setInterval(function () {
-                if (_this2._lifeStack.length < minStackSize) {
+                if (_this2.stackSize < _this2.batchSize) {
                     console.log('getBatch');
                     _this2.getBatch();
                     clearInterval(_this2.stackCheckHandle);
                 }
-            });
+            }, 100);
         };
 
         LifeWorkerService.prototype.stop = function stop() {
@@ -411,7 +410,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             var workerData = {
                 message: 'resume',
                 rules: this.rules,
-                generations: 5 * this.cellSize,
+                generations: this.batchSize,
                 cells: cells
             };
             this.wrkr.postMessage(workerData);
@@ -433,8 +432,8 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
     }()) || _class);
 });
 define('text!app.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/main\"></require>\n    <main></main>\n</template>"; });
-define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/stats\"></require>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"randombutton\"\n           title=\"Random\"\n           click.delegate=\"random()\"></a>\n        <label>\n        <input \n        class=\"trails\" \n        type=\"checkbox\" \n        checked.bind=\"trails\"\n        click.delegate=\"toggleTrails()\" /> Trails</label>\n    </life-controls>\n    <stats></stats>\n</template>"; });
+define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/stats\"></require>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"randombutton\"\n           title=\"Random\"\n           click.delegate=\"random()\"></a>\n        <label>\n        <input class=\"trails\" \n        type=\"checkbox\" \n        checked.bind=\"trails\"\n        click.delegate=\"toggleTrails()\" /> Trails</label>\n    </life-controls>\n    <stats></stats>\n</template>"; });
 define('text!resources/elements/life.html', ['module'], function(module) { module.exports = "<template>\n    <canvas id=\"life\"\n            width=\"750\"\n            height=\"464\">\n    </canvas>\n</template>"; });
-define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <require from=\"resources/elements/controls\"></require>\n    <h1>Fast Life</h1>\n    <life></life>\n    <controls></controls>\n</template>"; });
+define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <require from=\"resources/elements/controls\"></require>\n    <h1>Fast Life | AureliaJS</h1>\n    <life></life>\n    <controls></controls>\n</template>"; });
 define('text!resources/elements/stats.html', ['module'], function(module) { module.exports = "<template>\n    <p>stack: ${stackSize} | ${speed} gen/s</p>\n</template>"; });
 //# sourceMappingURL=app-bundle.js.map

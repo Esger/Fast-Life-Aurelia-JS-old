@@ -14,6 +14,7 @@ export class LifeWorkerService {
         this.ea = eventAggregator;
 
         this._lifeStack = [];
+        this.batchMultiplier = 100;
         this.stackCheckHandle = null;
         this.stackLowCheckHandle = null;
         this.wrkr = new Worker('./assets/life-worker.js');
@@ -47,26 +48,26 @@ export class LifeWorkerService {
     init(w, h, rules, cellSize, cells) {
         this.rules = rules;
         this.cellSize = cellSize;
+        this.batchSize = this.batchMultiplier * this.cellSize;
         let workerData = {
             message: 'start',
             w: w,
             h: h,
             rules: rules,
-            generations: 5 * this.cellSize,
+            generations: this.batchSize,
             cells: cells
         };
         this.wrkr.postMessage(workerData);
     }
 
     keepStack() {
-        let minStackSize = 5 * this.cellSize;
         this.stackCheckHandle = setInterval(() => {
-            if (this._lifeStack.length < minStackSize) {
+            if (this.stackSize < this.batchSize) {
                 console.log('getBatch');
                 this.getBatch();
                 clearInterval(this.stackCheckHandle);
             }
-        });
+        }, 100);
     }
 
     stop() {
@@ -80,7 +81,7 @@ export class LifeWorkerService {
         let workerData = {
             message: 'resume',
             rules: this.rules,
-            generations: 5 * this.cellSize,
+            generations: this.batchSize,
             cells: cells
         };
         this.wrkr.postMessage(workerData);

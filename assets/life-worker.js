@@ -21,17 +21,13 @@ var conway = {
     walkers: [],
 
     fillZero: function () {
-        let rows = [];
+        const cellCount = conway.spaceWidth * conway.spaceHeight;
+        let flatCells = [];
         let y = 0;
-        for (; y < conway.spaceHeight; y += 1) {
-            let cells = [];
-            let x = 0;
-            for (; x < conway.spaceWidth; x += 1) {
-                cells.push(0);
-            }
-            rows.push(cells);
+        for (; y < cellCount; y += 1) {
+            flatCells.push(0);
         }
-        return rows;
+        return flatCells;
     },
 
     ignite: function (w, h, rules, generations, cells) {
@@ -90,36 +86,42 @@ var conway = {
     updateNeighbours: function () {
         const count = conway.changedCells.length;
         const maxNeighbour = 2;
+        const rowLength = conway.spaceWidth;
+        const cellCount = conway.numberCells;
         let i = 0;
         for (; i < count; i += 1) {
             let thisx = conway.changedCells[i].x;
             let thisy = conway.changedCells[i].y;
             let dLife = (conway.changedCells[i].alive * 1 == 1) ? 1 : -1;
             let dSelf = dLife * 8;
-            let dy = -1;
-            for (; dy < maxNeighbour; dy += 1) {
-                let yEff = thisy + dy;
+            let dy = -rowLength;
+            for (; dy <= rowLength; dy += rowLength) {
+                let yEff = thisy * rowLength + dy;
                 let dx = -1;
                 for (; dx < maxNeighbour; dx += 1) {
-                    conway.neighbours[(yEff + conway.spaceHeight) % conway.spaceHeight][(thisx + dx + conway.spaceWidth) % conway.spaceWidth] += dLife;
+                    let cellIndex = (yEff + thisx + dx + cellCount) % cellCount;
+                    conway.neighbours[cellIndex] += dLife;
                 }
             }
-            conway.neighbours[thisy][thisx] += dSelf;
+            conway.neighbours[thisy * rowLength + thisx] += dSelf;
         }
     },
 
     evalChangedNeighbours: function () {
+        const rowLength = conway.spaceWidth;
+        const cellCount = conway.numberCells;
+        let neighbourCount;
+        conway.changedCells = [];
+
         let dies = function (indicatorValue) {
             return (indicatorValue == neighbourCount);
         };
-        conway.changedCells = [];
-        let neighbourCount;
 
         let y = 0;
         for (; y < conway.spaceHeight; y += 1) {
             let x = 0;
             for (; x < conway.spaceWidth; x += 1) {
-                neighbourCount = conway.neighbours[y][x];
+                neighbourCount = conway.neighbours[y * rowLength + x];
                 if (neighbourCount == conway.birthIndicator) {
                     conway.changedCells.push(conway.celXY(x, y, true));
                 }

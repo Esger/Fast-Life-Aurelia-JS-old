@@ -37,6 +37,7 @@ var conway = {
 
     stop: function () {
         clearInterval(conway.gogogo);
+        conway.sendStopAck();
     },
 
     // Put new pair of values in array
@@ -130,6 +131,13 @@ var conway = {
     sendReady: function () {
         let workerData = {
             message: 'ready',
+        };
+        postMessage(workerData);
+    },
+
+    sendStopAck: function () {
+        let workerData = {
+            message: 'stopAck',
         };
         postMessage(workerData);
     },

@@ -154,7 +154,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
 
             this.ea = eventAggregator;
             this.lfWs = lifeWorkerService;
-            this.cellSize = 1;
+            this.cellSize = 2;
             this.cellsAlive = 0;
             this.fillRatio = 20;
             this.trails = true;
@@ -187,20 +187,19 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
                 offScreen.fillStyle = "rgba(255, 255, 255, " + this.opacity + ")";
                 offScreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-                offScreen.fillStyle = "rgb(128, 128, 0)";
+                offScreen.fillStyle = "rgba(128, 128, 0, 1)";
                 var i = cells.length - 1;
                 while (i >= 0) {
-                    var cell = cells[i--];
+                    var cell = cells[i];i -= 1;
                     offScreen.fillRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize);
                 }
-
                 this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
                 this.cellsAlive = cells.length;
                 this.lifeSteps += 1;
             }
             setTimeout(function () {
                 _this.drawFromStack();
-            });
+            }, 0);
         };
 
         LifeCustomElement.prototype.initLife = function initLife() {
@@ -358,6 +357,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             this.batchMultiplier = 5;
             this.stackCheckHandle = null;
             this.stackLowCheckHandle = null;
+            this.stopHandle = null;
             this.wrkr = new Worker('./assets/life-worker.js');
             this.wrkr.onmessage = function (e) {
                 if (e.data) {
@@ -368,6 +368,9 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
                             break;
                         case 'ready':
                             _this.keepStack();
+                            break;
+                        case 'stopAck':
+                            clearInterval(_this.stopHandle);
                             break;
                         default:
                             break;
@@ -405,10 +408,14 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         };
 
         LifeWorkerService.prototype.stop = function stop() {
+            var _this3 = this;
+
             var workerData = {
                 message: 'stop'
             };
-            this.wrkr.postMessage(workerData);
+            this.stopHandle = setInterval(function () {
+                _this3.wrkr.postMessage(workerData);
+            }, 10);
         };
 
         LifeWorkerService.prototype.getBatch = function getBatch(cells) {

@@ -13,7 +13,7 @@ export class LifeCustomElement {
     constructor(eventAggregator, lifeWorkerService) {
         this.ea = eventAggregator;
         this.lfWs = lifeWorkerService;
-        this.cellSize = 1;
+        this.cellSize = 2;
         this.cellsAlive = 0;
         this.fillRatio = 20;
         this.trails = true;
@@ -44,21 +44,17 @@ export class LifeCustomElement {
             offScreen.fillStyle = "rgba(255, 255, 255, " + this.opacity + ")";
             offScreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-            offScreen.fillStyle = "rgb(128, 128, 0)";
+            offScreen.fillStyle = "rgba(128, 128, 0, 1)";
             let i = cells.length - 1;
             while (i >= 0) {
-                let cell = cells[i--];
+                let cell = cells[i]; i -= 1;
                 offScreen.fillRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize);
             }
-            // for (; i < count; i += 1) {
-            //     let cell = cells[i];
-            //     offScreen.fillRect(cell.x, cell.y, 1, 1);
-            // }
             this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
             this.cellsAlive = cells.length;
             this.lifeSteps += 1;
         }
-        setTimeout(() => { this.drawFromStack(); });
+        setTimeout(() => { this.drawFromStack(); }, 0);
     }
 
     initLife() {

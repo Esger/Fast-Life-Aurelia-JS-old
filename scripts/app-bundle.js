@@ -165,7 +165,9 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.speed = this.lifeSteps - this.prevSteps;
             this.prevSteps = this.lifeSteps;
             this.ea.publish('stats', {
-                speed: this.speed,
+                cellCount: this.cellsAlive,
+                generations: this.lifeSteps,
+                speed: this.speed * 2,
                 stackSize: this.lfWs.stackSize
             });
         };
@@ -175,31 +177,26 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         };
 
-        LifeCustomElement.prototype.drawCells = function drawCells(cells) {
-            this.ctxOffscreen.fillStyle = "rgb(128, 128, 0)";
-            var count = cells.length;
-            var i = 0;
-            for (; i < count; i += 1) {
-                this.ctxOffscreen.fillRect(cells[i].x * this.cellSize, cells[i].y * this.cellSize, this.cellSize, this.cellSize);
-            }
-            this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
-            this.cellsAlive = cells.length;
-        };
-
-        LifeCustomElement.prototype.fadeCells = function fadeCells() {
-            var opacity = this.trails * 1 * 0.5;
-            this.ctxOffscreen.fillStyle = "rgba(255, 255, 255, " + opacity + ")";
-            this.ctxOffscreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        };
-
         LifeCustomElement.prototype.drawFromStack = function drawFromStack() {
             var _this = this;
 
             var cells = this.lfWs.cells;
+            var cellSize = this.cellSize;
+            var offScreen = this.ctxOffscreen;
             if (cells) {
+                offScreen.fillStyle = "rgba(255, 255, 255, " + this.opacity + ")";
+                offScreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                offScreen.fillStyle = "rgb(128, 128, 0)";
+                var i = cells.length - 1;
+                while (i >= 0) {
+                    var cell = cells[i--];
+                    offScreen.fillRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize);
+                }
+
+                this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
+                this.cellsAlive = cells.length;
                 this.lifeSteps += 1;
-                this.fadeCells();
-                this.drawCells(cells);
             }
             setTimeout(function () {
                 _this.drawFromStack();
@@ -209,6 +206,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         LifeCustomElement.prototype.initLife = function initLife() {
             var _this2 = this;
 
+            this.opacity = this.trails * 1 * 0.2;
             this.canvas = document.getElementById('life');
             this.ctx = this.canvas.getContext('2d');
             this.canvasWidth = this.canvas.width;
@@ -228,7 +226,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.drawFromStack();
             this.speedHandle = setInterval(function () {
                 _this2.countGenerations();
-            }, 1000);
+            }, 500);
         };
 
         LifeCustomElement.prototype.addListeners = function addListeners() {
@@ -292,12 +290,16 @@ define('resources/elements/stats',['exports', 'aurelia-framework', 'aurelia-even
             this.ea = eventAggregator;
             this.speed = 0;
             this.stackSize = 0;
+            this.cellCount = 0;
+            this.generations = 0;
         }
 
         StatsCustomElement.prototype.addListeners = function addListeners() {
             var _this = this;
 
             this.ea.subscribe('stats', function (response) {
+                _this.cellCount = response.cellCount;
+                _this.generations = response.generations;
                 _this.speed = response.speed;
                 _this.stackSize = response.stackSize;
             });
@@ -353,6 +355,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             this.ea = eventAggregator;
 
             this._lifeStack = [];
+            this.batchMultiplier = 5;
             this.stackCheckHandle = null;
             this.stackLowCheckHandle = null;
             this.wrkr = new Worker('./assets/life-worker.js');
@@ -376,12 +379,13 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         LifeWorkerService.prototype.init = function init(w, h, rules, cellSize, cells) {
             this.rules = rules;
             this.cellSize = cellSize;
+            this.batchSize = this.batchMultiplier * this.cellSize;
             var workerData = {
                 message: 'start',
                 w: w,
                 h: h,
                 rules: rules,
-                generations: 5 * this.cellSize,
+                generations: this.batchSize,
                 cells: cells
             };
             this.wrkr.postMessage(workerData);
@@ -390,7 +394,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         LifeWorkerService.prototype.keepStack = function keepStack() {
             var _this2 = this;
 
-            var minStackSize = 5 * this.cellSize;
+            var minStackSize = this.batchSize;
             this.stackCheckHandle = setInterval(function () {
                 if (_this2._lifeStack.length < minStackSize) {
                     console.log('getBatch');
@@ -411,7 +415,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             var workerData = {
                 message: 'resume',
                 rules: this.rules,
-                generations: 5 * this.cellSize,
+                generations: this.batchSize,
                 cells: cells
             };
             this.wrkr.postMessage(workerData);
@@ -436,5 +440,5 @@ define('text!app.html', ['module'], function(module) { module.exports = "<templa
 define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/stats\"></require>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"randombutton\"\n           title=\"Random\"\n           click.delegate=\"random()\"></a>\n        <label>\n        <input \n        class=\"trails\" \n        type=\"checkbox\" \n        checked.bind=\"trails\"\n        click.delegate=\"toggleTrails()\" /> Trails</label>\n    </life-controls>\n    <stats></stats>\n</template>"; });
 define('text!resources/elements/life.html', ['module'], function(module) { module.exports = "<template>\n    <canvas id=\"life\"\n            width=\"750\"\n            height=\"464\">\n    </canvas>\n</template>"; });
 define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <require from=\"resources/elements/controls\"></require>\n    <h1>Fast Life</h1>\n    <life></life>\n    <controls></controls>\n</template>"; });
-define('text!resources/elements/stats.html', ['module'], function(module) { module.exports = "<template>\n    <p>stack: ${stackSize} | ${speed} gen/s</p>\n</template>"; });
+define('text!resources/elements/stats.html', ['module'], function(module) { module.exports = "<template>\n    <p>generations: ${generations} | cells: ${cellCount} | stack: ${stackSize} | ${speed} gen/s</p>\n</template>"; });
 //# sourceMappingURL=app-bundle.js.map

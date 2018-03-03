@@ -96,14 +96,16 @@ var conway = {
 
     // Evaluate neighbourscounts for new livecells
     evalNeighbours: function () {
-
-        conway.liveCells = [];
         const count = conway.numberCells;
+        const rowLength = conway.spaceWidth;
+        conway.liveCells = [];
+
         let i = 0;
         for (; i < count; i += 1) {
             if (conway.liferules[conway.neighbours[i]]) {
-                let y = Math.floor(i / conway.spaceWidth);
-                let x = i - (y * conway.spaceWidth);
+                let y = Math.floor(i / rowLength);
+                let x = i % rowLength;
+                // let x = i - (y * rowLength);
                 conway.liveCells.push(conway.celXY(x, y));
             }
         }

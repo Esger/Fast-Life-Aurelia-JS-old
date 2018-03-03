@@ -71,41 +71,40 @@ var conway = {
     },
 
     // Tell neighbours around livecells they have a neighbour
-    countNeighbours: function () {
+    updateNeighbours: function () {
 
         const count = conway.liveCells.length;
         const maxNeighbour = 2;
+        const rowLength = conway.spaceWidth;
+        const cellCount = conway.numberCells;
+
         let i = 0;
         for (; i < count; i += 1) {
             let thisx = conway.liveCells[i].x;
             let thisy = conway.liveCells[i].y;
-            let dy = -1;
-            for (; dy < maxNeighbour; dy += 1) {
+            let dy = -rowLength;
+            for (; dy <= rowLength; dy += rowLength) {
+                let yEff = thisy * rowLength + dy;
                 let dx = -1;
                 for (; dx < maxNeighbour; dx += 1) {
-                    conway.neighbours[((thisy + dy) * conway.spaceWidth + thisx + dx + conway.numberCells) % conway.numberCells] += 1;
+                    conway.neighbours[(yEff + thisx + dx + cellCount) % cellCount] += 1;
                 }
             }
-            conway.neighbours[thisy * conway.spaceWidth + thisx] += 9;
+            conway.neighbours[thisy * rowLength + thisx] += 9;
         }
     },
 
     // Evaluate neighbourscounts for new livecells
     evalNeighbours: function () {
 
-
-        function livecell() {
-            let y = Math.floor(i / conway.spaceWidth);
-            let x = i - (y * conway.spaceWidth);
-            conway.liveCells.push(conway.celXY(x, y));
-        }
-
         conway.liveCells = [];
         const count = conway.numberCells;
         let i = 0;
         for (; i < count; i += 1) {
             if (conway.liferules[conway.neighbours[i]]) {
-                livecell();
+                let y = Math.floor(i / conway.spaceWidth);
+                let x = i - (y * conway.spaceWidth);
+                conway.liveCells.push(conway.celXY(x, y));
             }
         }
     },
@@ -138,7 +137,7 @@ var conway = {
         conway.lifeSteps += 1;
         if (conway.lifeSteps < conway.generations) {
             conway.zeroNeighbours();
-            conway.countNeighbours();
+            conway.updateNeighbours();
             conway.evalNeighbours();
             conway.sendScreen();
             // console.log('steps ', conway.lifeSteps);

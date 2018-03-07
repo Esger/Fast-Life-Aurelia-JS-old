@@ -149,7 +149,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
 
             this.ea = eventAggregator;
             this.lfWs = lifeWorkerService;
-            this.cellSize = 2;
+            this.cellSize = 1;
             this.cellsAlive = 0;
             this.fillRatio = 20;
             this.trails = true;
@@ -377,6 +377,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
                             _this.keepStack();
                             break;
                         case 'stopAck':
+                            console.log('stop ack');
                             clearInterval(_this.stopHandle);
                             break;
                         default:
@@ -422,6 +423,8 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             };
             this.stopHandle = setInterval(function () {
                 _this3.wrkr.postMessage(workerData);
+                clearInterval(_this3.stackCheckHandle);
+                console.log('stopping');
             }, 10);
         };
 

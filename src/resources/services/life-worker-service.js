@@ -31,6 +31,7 @@ export class LifeWorkerService {
                         this.keepStack();
                         break;
                     case 'stopAck':
+                        console.log('stop ack');
                         clearInterval(this.stopHandle);
                         break;
                     default:
@@ -81,6 +82,8 @@ export class LifeWorkerService {
         };
         this.stopHandle = setInterval(() => {
             this.wrkr.postMessage(workerData);
+            clearInterval(this.stackCheckHandle);
+            console.log('stopping');
         }, 10);
     }
 

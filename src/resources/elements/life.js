@@ -13,7 +13,7 @@ export class LifeCustomElement {
     constructor(eventAggregator, lifeWorkerService) {
         this.ea = eventAggregator;
         this.lfWs = lifeWorkerService;
-        this.cellSize = 2;
+        this.cellSize = 1;
         this.cellsAlive = 0;
         this.fillRatio = 20;
         this.trails = true;

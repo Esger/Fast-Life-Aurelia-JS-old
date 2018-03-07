@@ -31,7 +31,6 @@ export class LifeWorkerService {
                         this.keepStack();
                         break;
                     case 'stopAck':
-                        console.log('stop ack');
                         clearInterval(this.stopHandle);
                         break;
                     default:
@@ -65,6 +64,16 @@ export class LifeWorkerService {
         this.wrkr.postMessage(workerData);
     }
 
+    getBatch(cells) {
+        let workerData = {
+            message: 'resume',
+            rules: this.rules,
+            generations: this.batchSize,
+            cells: cells
+        };
+        this.wrkr.postMessage(workerData);
+    }
+
     keepStack() {
         let minStackSize = this.batchSize;
         this.stackCheckHandle = setInterval(() => {
@@ -83,18 +92,7 @@ export class LifeWorkerService {
         this.stopHandle = setInterval(() => {
             this.wrkr.postMessage(workerData);
             clearInterval(this.stackCheckHandle);
-            console.log('stopping');
         }, 10);
-    }
-
-    getBatch(cells) {
-        let workerData = {
-            message: 'resume',
-            rules: this.rules,
-            generations: this.batchSize,
-            cells: cells
-        };
-        this.wrkr.postMessage(workerData);
     }
 
 }

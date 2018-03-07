@@ -377,7 +377,6 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
                             _this.keepStack();
                             break;
                         case 'stopAck':
-                            console.log('stop ack');
                             clearInterval(_this.stopHandle);
                             break;
                         default:
@@ -396,6 +395,16 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
                 w: w,
                 h: h,
                 rules: rules,
+                generations: this.batchSize,
+                cells: cells
+            };
+            this.wrkr.postMessage(workerData);
+        };
+
+        LifeWorkerService.prototype.getBatch = function getBatch(cells) {
+            var workerData = {
+                message: 'resume',
+                rules: this.rules,
                 generations: this.batchSize,
                 cells: cells
             };
@@ -424,18 +433,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             this.stopHandle = setInterval(function () {
                 _this3.wrkr.postMessage(workerData);
                 clearInterval(_this3.stackCheckHandle);
-                console.log('stopping');
             }, 10);
-        };
-
-        LifeWorkerService.prototype.getBatch = function getBatch(cells) {
-            var workerData = {
-                message: 'resume',
-                rules: this.rules,
-                generations: this.batchSize,
-                cells: cells
-            };
-            this.wrkr.postMessage(workerData);
         };
 
         _createClass(LifeWorkerService, [{

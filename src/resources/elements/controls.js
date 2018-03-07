@@ -10,29 +10,28 @@ export class ControlsCustomElement {
 
     constructor(eventAggregator) {
         this.ea = eventAggregator;
-        this.trails = false;
+        this.trails = true;
     }
 
     clear() {
         this.ea.publish('clear');
     }
-    continue() {
-        this.ea.publish('continue');
-    }
-    random() {
-        this.ea.publish('startRandom');
-    }
-    start() {
-        this.ea.publish('start');
+    stop() {
+        this.ea.publish('stop');
     }
     step() {
         this.ea.publish('step');
     }
-    stop() {
-        this.ea.publish('stop');
+    start() {
+        this.ea.publish('start');
+    }
+    // continue() {
+    //     this.ea.publish('continue');
+    // }
+    random() {
+        this.ea.publish('startRandom');
     }
     toggleTrails() {
-        this.trails = !this.trails;
         this.ea.publish('toggleTrails', this.trails);
     }
 

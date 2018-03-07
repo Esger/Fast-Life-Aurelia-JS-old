@@ -6,10 +6,6 @@
            title="Clear"
            click.delegate="clear()"></a>
         <a href="#"
-           class="startbutton"
-           title="Start"
-           click.delegate="start()"></a>
-        <a href="#"
            class="stopbutton"
            title="Stop"
            click.delegate="stop()"></a>
@@ -18,14 +14,18 @@
            title="Step"
            click.delegate="step()"></a>
         <a href="#"
+           class="startbutton"
+           title="Start"
+           click.delegate="start()"></a>
+        <a href="#"
            class="randombutton"
            title="Random"
            click.delegate="random()"></a>
-        <label>
-        <input class="trails" 
-        type="checkbox" 
-        checked.bind="trails"
-        click.delegate="toggleTrails()" /> Trails</label>
+        <label><input 
+            class="trails" 
+            type="checkbox" 
+            checked.bind="trails"
+            change.delegate="toggleTrails()" /> Trails ${trails}</label>
     </life-controls>
     <stats></stats>
 </template>

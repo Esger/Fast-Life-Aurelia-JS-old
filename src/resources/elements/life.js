@@ -18,7 +18,7 @@ export class LifeCustomElement {
         this.fillRatio = 20;
         this.trails = true;
         this.speedHandle = null;
-        this.opacity = this.trails * 1 * 0.5;
+        this.opacity = 1 - this.trails * 0.9;
     }
 
     countGenerations() {
@@ -35,6 +35,11 @@ export class LifeCustomElement {
     clearSpace() {
         this.ctx.fillStyle = "rgb(255, 255, 255)";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    animateStep() {
+        this.drawFromStack();
+        setTimeout(() => { this.animateStep(); }, 0);
     }
 
     drawFromStack() {
@@ -55,11 +60,10 @@ export class LifeCustomElement {
             this.cellsAlive = cells.length;
             this.lifeSteps += 1;
         }
-        setTimeout(() => { this.drawFromStack(); }, 0);
     }
 
     initLife() {
-        this.opacity = this.trails * 1 * 0.2;
+        this.opacity = 1 - this.trails * 0.9;
         this.canvas = document.getElementById('life');
         this.ctx = this.canvas.getContext('2d');
         this.canvasWidth = this.canvas.width;
@@ -73,33 +77,36 @@ export class LifeCustomElement {
         this.ctxOffscreen = this.offScreenCanvas.getContext('2d');
 
         this.liferules = [
-            false, false, false, true, false, false, false, false, false,
+            false, false, false, true, false, false, false, false, false, false,
             false, false, true, true, false, false, false, false, false
         ];
-        this.changeIndicators = [3, 10, 11, 14, 16, 17, 18];
         this.lifeSteps = 0; // Number of iterations / steps done
         this.prevSteps = 0;
         this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, this.cellSize);
-        this.drawFromStack();
         this.speedHandle = setInterval(() => { this.countGenerations(); }, 500);
     }
 
     addListeners() {
         this.ea.subscribe('startRandom', () => {
-            this.initLife();
+            this.animateStep();
         });
         this.ea.subscribe('stop', () => {
             this.lfWs.stop();
         });
+        this.ea.subscribe('start', () => {
+            this.animateStep();
+        });
         this.ea.subscribe('step', () => {
-            this.lfWs.getBatch();
+            this.drawFromStack();
         });
         this.ea.subscribe('toggleTrails', () => {
             this.trails = !this.trails;
+            this.opacity = 1 - this.trails * 0.9;
         });
     }
 
     attached() {
+        this.initLife();
         this.addListeners();
     }
 

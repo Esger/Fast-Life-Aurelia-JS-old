@@ -2,7 +2,7 @@ var conway = {
     gogogo: null,
     cellsAlive: 0, // Number of cells alive
     fillRatio: 0.2, // Percentage of available cells that will be set alive initially (20)
-    newLifeCells: [],
+    // newLifeCells: [],
     liferules: [],
     // liferules : [
     //     false, false, false, true, false, false, false, false, false,
@@ -10,7 +10,6 @@ var conway = {
     // ],
     birthIndicator: 3,
     deathIndicators: [9, 10, 13, 14, 15, 16, 17],
-    changedCells: [], // Array with x,y coordinates of living cells
     numberCells: 0, // Number of available cells
     spaceHeight: 0,
     spaceWidth: 0,
@@ -38,10 +37,9 @@ var conway = {
         conway.numberCells = conway.spaceWidth * conway.spaceHeight;
         conway.startnumberLivecells = conway.numberCells * conway.fillRatio;
         conway.cellsAlive = conway.startnumberLivecells;
-        conway.changedCells = [];
-        conway.newLifeCells = [];
+        // conway.newLifeCells = [];
         conway.neighbours = conway.fillZero();
-        conway.changedCells = cells || conway.fillRandom();
+        conway.liveCells = cells || conway.fillRandom();
         conway.sendScreen();
     },
 
@@ -67,7 +65,7 @@ var conway = {
         return cell;
     },
 
-    // Fill changedCells with random cellxy's
+    // Fill liveCells with random cellxy's
     fillRandom: function () {
         let cells = [];
         let y = 0;
@@ -136,7 +134,7 @@ var conway = {
     sendScreen: function () {
         let workerData = {
             message: 'newGeneration',
-            cells: conway.changedCells
+            cells: conway.liveCells
         };
         postMessage(workerData);
     },

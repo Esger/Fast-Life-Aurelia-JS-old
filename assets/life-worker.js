@@ -54,6 +54,7 @@ var conway = {
 
     stop: function () {
         clearInterval(conway.gogogo);
+        conway.sendStopAck();
     },
 
     // Put new pair of values in array
@@ -81,54 +82,53 @@ var conway = {
         return cells;
     },
 
-    // Tell neighbours around changedCells they have changed +1 / -1
-    // only update counts around changed cells !
+    // Set all neighbours to zero
+    zeroNeighbours: function () {
+
+        const count = conway.numberCells;
+        let i = 0;
+        for (; i < count; i += 1) {
+            conway.neighbours[i] = 0;
+        }
+    },
+
+    // Tell neighbours around livecells they have a neighbour
     updateNeighbours: function () {
-        const count = conway.changedCells.length;
+
+        const count = conway.liveCells.length;
         const maxNeighbour = 2;
         const rowLength = conway.spaceWidth;
         const cellCount = conway.numberCells;
+
         let i = 0;
         for (; i < count; i += 1) {
-            let thisx = conway.changedCells[i].x;
-            let thisy = conway.changedCells[i].y;
-            let dLife = (conway.changedCells[i].alive * 1 == 1) ? 1 : -1;
-            let dSelf = dLife * 8;
+            let thisx = conway.liveCells[i].x;
+            let thisy = conway.liveCells[i].y;
             let dy = -rowLength;
             for (; dy <= rowLength; dy += rowLength) {
                 let yEff = thisy * rowLength + dy;
                 let dx = -1;
                 for (; dx < maxNeighbour; dx += 1) {
-                    let cellIndex = (yEff + thisx + dx + cellCount) % cellCount;
-                    conway.neighbours[cellIndex] += dLife;
+                    conway.neighbours[(yEff + thisx + dx + cellCount) % cellCount] += 1;
                 }
             }
-            conway.neighbours[thisy * rowLength + thisx] += dSelf;
+            conway.neighbours[thisy * rowLength + thisx] += 9;
         }
     },
 
-    evalChangedNeighbours: function () {
+    // Evaluate neighbourscounts for new livecells
+    evalNeighbours: function () {
+        const count = conway.numberCells;
         const rowLength = conway.spaceWidth;
-        const cellCount = conway.numberCells;
-        let neighbourCount;
-        conway.changedCells = [];
+        conway.liveCells = [];
 
-        let dies = function (indicatorValue) {
-            return (indicatorValue == neighbourCount);
-        };
-
-        let y = 0;
-        for (; y < conway.spaceHeight; y += 1) {
-            let x = 0;
-            for (; x < conway.spaceWidth; x += 1) {
-                neighbourCount = conway.neighbours[y * rowLength + x];
-                if (neighbourCount == conway.birthIndicator) {
-                    conway.changedCells.push(conway.celXY(x, y, true));
-                }
-                let dead = conway.deathIndicators.some(dies);
-                if (dead) {
-                    conway.changedCells.push(conway.celXY(x, y, false));
-                }
+        let i = 0;
+        for (; i < count; i += 1) {
+            if (conway.liferules[conway.neighbours[i]]) {
+                let y = Math.floor(i / rowLength);
+                let x = i % rowLength;
+                // let x = i - (y * rowLength);
+                conway.liveCells.push(conway.celXY(x, y));
             }
         }
     },
@@ -148,11 +148,19 @@ var conway = {
         postMessage(workerData);
     },
 
+    sendStopAck: function () {
+        let workerData = {
+            message: 'stopAck',
+        };
+        postMessage(workerData);
+    },
+
     // Animation function
     bugLifeStep: function () {
         if (conway.lifeSteps < conway.generations) {
+            conway.zeroNeighbours();
             conway.updateNeighbours();
-            conway.evalChangedNeighbours();
+            conway.evalNeighbours();
             conway.sendScreen();
             // console.log('steps ', conway.lifeSteps);
         } else {

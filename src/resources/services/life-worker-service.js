@@ -14,9 +14,10 @@ export class LifeWorkerService {
         this.ea = eventAggregator;
 
         this._lifeStack = [];
-        this.batchMultiplier = 100;
+        this.batchMultiplier = 5;
         this.stackCheckHandle = null;
         this.stackLowCheckHandle = null;
+        this.stopHandle = null;
         this.wrkr = new Worker('./assets/life-worker.js');
         this.wrkr.onmessage = (e) => {
             if (e.data) {
@@ -28,6 +29,9 @@ export class LifeWorkerService {
                         break;
                     case 'ready':
                         this.keepStack();
+                        break;
+                    case 'stopAck':
+                        clearInterval(this.stopHandle);
                         break;
                     default:
                         break;
@@ -61,6 +65,7 @@ export class LifeWorkerService {
     }
 
     keepStack() {
+        let minStackSize = this.batchSize;
         this.stackCheckHandle = setInterval(() => {
             if (this.stackSize < this.batchSize) {
                 console.log('getBatch');
@@ -74,7 +79,9 @@ export class LifeWorkerService {
         let workerData = {
             message: 'stop',
         };
-        this.wrkr.postMessage(workerData);
+        this.stopHandle = setInterval(() => {
+            this.wrkr.postMessage(workerData);
+        }, 10);
     }
 
     getBatch(cells) {

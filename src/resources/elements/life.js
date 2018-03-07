@@ -13,7 +13,7 @@ export class LifeCustomElement {
     constructor(eventAggregator, lifeWorkerService) {
         this.ea = eventAggregator;
         this.lfWs = lifeWorkerService;
-        this.cellSize = 1;
+        this.cellSize = 2;
         this.cellsAlive = 0;
         this.fillRatio = 20;
         this.trails = true;
@@ -25,6 +25,8 @@ export class LifeCustomElement {
         this.speed = this.lifeSteps - this.prevSteps;
         this.prevSteps = this.lifeSteps;
         this.ea.publish('stats', {
+            cellCount: this.cellsAlive,
+            generations: this.lifeSteps,
             speed: this.speed * 2,
             stackSize: this.lfWs.stackSize
         });
@@ -35,30 +37,29 @@ export class LifeCustomElement {
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
-    drawCells(cells) {
-        const count = cells.length;
-        let i = 0;
-        for (; i < count; i += 1) {
-            // this.ctx.fillStyle = (cells[i].alive) ? "rgba(128, 128, 0, 1)" : "rgba(255, 255, 255, " + this.opacity + ")";
-            this.ctxOffscreen.fillStyle = (cells[i].alive) ? "rgba(128, 128, 0, 1)" : "rgba(255, 255, 255, 1)";
-            this.ctxOffscreen.fillRect(cells[i].x * this.cellSize, cells[i].y * this.cellSize, this.cellSize, this.cellSize);
-            // this.ctxOffscreen.fillStyle = (cells[i].alive) ? "rgba(128, 128, 0, 1)" : "rgba(255, 255, 255, " + this.opacity + ")";
-            // this.ctxOffscreen.fillRect(cells[i].x * this.cellSize, cells[i].y * this.cellSize, this.cellSize, this.cellSize);
-        }
-        this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
-        this.cellsAlive = cells.length;
-    }
-
     drawFromStack() {
         let cells = this.lfWs.cells;
+        const cellSize = this.cellSize;
+        const offScreen = this.ctxOffscreen;
         if (cells) {
-            this.drawCells(cells);
+            offScreen.fillStyle = "rgba(255, 255, 255, " + this.opacity + ")";
+            offScreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+            offScreen.fillStyle = "rgba(128, 128, 0, 1)";
+            let i = cells.length - 1;
+            while (i >= 0) {
+                let cell = cells[i]; i -= 1;
+                offScreen.fillRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize);
+            }
+            this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
+            this.cellsAlive = cells.length;
             this.lifeSteps += 1;
         }
-        setTimeout(() => { this.drawFromStack(); });
+        setTimeout(() => { this.drawFromStack(); }, 0);
     }
 
     initLife() {
+        this.opacity = this.trails * 1 * 0.2;
         this.canvas = document.getElementById('life');
         this.ctx = this.canvas.getContext('2d');
         this.canvasWidth = this.canvas.width;

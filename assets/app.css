@@ -106,9 +106,16 @@ section {
 }
 body {
   height: 100vh;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
+  -ms-flex-pack: distribute;
   justify-content: space-around;
   font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 controls {
   display: flex;
@@ -122,11 +129,42 @@ controls life-controls {
 controls life-controls a {
   width: 24px;
   height: 21px;
+  margin-right: 2px;
   background-image: url("buttons.gif");
   background-repeat: no-repeat;
 }
 controls life-controls label {
   font-size: 14px;
+}
+controls life-controls [type=checkbox] {
+  transform: scale(0.000001);
+}
+controls life-controls [type=checkbox] + label {
+  display: flex;
+  font-weight: bold;
+  color: #dd0;
+  background-color: #8c8c00;
+  height: 21px;
+  line-height: 21px;
+  padding: 0 20px 0 10px;
+  border-radius: 2px;
+}
+controls life-controls [type=checkbox] + label::before {
+  content: '√';
+  flex: 1 0 15px;
+  opacity: 0;
+}
+controls life-controls [type=checkbox] + label::after {
+  content: '';
+  flex: 0 0 1px;
+  opacity: 0;
+}
+controls life-controls [type=checkbox]:checked + label {
+  color: whitesmoke;
+}
+controls life-controls [type=checkbox]:checked + label::after,
+controls life-controls [type=checkbox]:checked + label::before {
+  opacity: 1;
 }
 controls life-controls .clearbutton {
   background-position: 0 -25px;

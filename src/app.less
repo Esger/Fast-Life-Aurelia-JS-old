@@ -17,8 +17,15 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
 }
 
 body {
-    height         : 100vh;
-    display        : flex;
-    justify-content: space-around;
-    font-family    : 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    height             : 100vh;
+    display            : -webkit-box;
+    display            : -ms-flexbox;
+    display            : flex;
+    -ms-flex-pack      : distribute;
+    justify-content    : space-around;
+    font-family        : 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    -webkit-user-select: none;
+    -moz-user-select   : none;
+    -ms-user-select    : none;
+    user-select        : none;
 }

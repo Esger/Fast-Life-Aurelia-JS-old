@@ -17,11 +17,12 @@
            class="startbutton"
            title="Start"
            click.delegate="start()"></a>
-        <label><input 
-            class="trails" 
-            type="checkbox" 
-            checked.bind="trails"
-            change.delegate="toggleTrails()" /> Trails</label>
+        <input class="trails"
+               id="trails"
+               type="checkbox"
+               checked.bind="trails"
+               change.delegate="toggleTrails()" />
+        <label for="trails"> Trails</label>
     </life-controls>
     <stats></stats>
 </template>

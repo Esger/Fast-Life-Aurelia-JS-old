@@ -1,0 +1,28 @@
+<template>
+    <require from="resources/elements/stats"></require>
+    <life-controls>
+        <a href="#"
+           class="clearbutton"
+           title="Clear"
+           click.delegate="clear()"></a>
+        <a href="#"
+           class="stopbutton"
+           title="Stop"
+           click.delegate="stop()"></a>
+        <a href="#"
+           class="stepbutton"
+           title="Step"
+           click.delegate="step()"></a>
+        <a href="#"
+           class="startbutton"
+           title="Start"
+           click.delegate="start()"></a>
+        <input class="trails"
+               id="trails"
+               type="checkbox"
+               checked.bind="trails"
+               change.delegate="toggleTrails()" />
+        <label for="trails"> Trails</label>
+    </life-controls>
+    <stats></stats>
+</template>

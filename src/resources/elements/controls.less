@@ -1,0 +1,102 @@
+controls {
+    display        : flex;
+    justify-content: space-between;
+
+    life-controls {
+        display        : flex;
+        justify-content: flex-start;
+        align-items    : center;
+
+        a {
+            width            : 24px;
+            height           : 21px;
+            margin-right     : 2px;
+            background-image : url("./buttons.gif");
+            background-repeat: no-repeat;
+        }
+
+        label {
+            font-size: 14px;
+        }
+
+        [type=checkbox] {
+            transform: scale(0.000001);
+
+            &+label {
+                display         : flex;
+                font-weight     : bold;
+                color           : #dd0;
+                background-color: rgb(140,140,0);
+                height          : 21px;
+                line-height     : 21px;
+                padding         : 0 20px 0 10px;
+                border-radius   : 2px;
+
+                &::before {
+                    content: '√';
+                    flex   : 1 0 15px;
+                    opacity: 0;
+                }
+
+                &::after {
+                    content: '';
+                    flex   : 0 0 1px;
+                    opacity: 0;
+                }
+            }
+
+            &:checked {
+                &+label {
+                    color: whitesmoke;
+
+                    &::after, &::before {
+                        opacity: 1;
+                    }
+                }
+            }
+
+        }
+
+        .clearbutton {
+            background-position: 0 -25px;
+
+            &:hover {
+                background-position: -50px -25px;
+            }
+        }
+
+        .startbutton {
+            width              : 38px;
+            background-position: 0 -99px;
+
+            &:hover {
+                background-position: -50px -99px;
+            }
+        }
+
+        .stopbutton {
+            background-position: 0 0;
+
+            &:hover {
+                background-position: -50px 0;
+            }
+        }
+
+        .stepbutton {
+            background-position: 0 -49px;
+
+            &:hover {
+                background-position: -50px -49px;
+            }
+        }
+
+        .randombutton {
+            margin-right       : 20px;
+            background-position: 0 -125px;
+
+            &:hover {
+                background-position: -50px -125px;
+            }
+        }
+    }
+}

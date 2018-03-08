@@ -25,12 +25,6 @@ export class ControlsCustomElement {
     start() {
         this.ea.publish('start');
     }
-    // continue() {
-    //     this.ea.publish('continue');
-    // }
-    random() {
-        this.ea.publish('startRandom');
-    }
     toggleTrails() {
         this.ea.publish('toggleTrails', this.trails);
     }

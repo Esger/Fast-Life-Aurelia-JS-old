@@ -13,54 +13,47 @@ export class LifeWorkerService {
     constructor(eventAggregator) {
         this.ea = eventAggregator;
 
-        this._lifeStack = [];
-        this.batchMultiplier = 5;
-        this.stackCheckHandle = null;
-        this.stackLowCheckHandle = null;
-        this.stopHandle = null;
+        this._roundStack = [[], [], [], [], [], [], [], [], [], []];
+        this.fillSlotPointer = 0;
+        this.maxIndex = 9;
+        this.started = false;
         this.wrkr = new Worker('./assets/life-worker.js');
         this.wrkr.onmessage = (e) => {
-            if (e.data) {
-                let message = e.data.message;
-                switch (message) {
-                    case 'newGeneration':
-                        // push Generation on stack
-                        this._lifeStack.push(e.data.cells);
-                        break;
-                    case 'ready':
-                        this.keepStack();
-                        break;
-                    case 'stopAck':
-                        clearInterval(this.stopHandle);
-                        break;
-                    default:
-                        break;
-                }
+            if (e.data && e.data.message == 'newGeneration') {
+                this._roundStack[this.fillSlotPointer] = e.data.cells;
+                this.fillSlotPointer = (this.fillSlotPointer + 1) % this._roundStack.length;
             }
-            // this.ea.publish('newGeneration', e.data);
         };
     }
 
     get cells() {
-        return this._lifeStack.shift();
+        let pointer = this.getSlotPointer;
+        this.getSlotPointer = (this.getSlotPointer + 1) % this._roundStack.length;
+        if (this.started) {
+            let emptySlotPointer = (pointer == 0) ? this.maxIndex : pointer - 1;
+            // this._roundStack[emptySlotPointer] = [];
+            setTimeout(() => { this.getBatch(); });
+        }
+        this.started = true;
+        return this._roundStack[pointer];
     }
 
     get stackSize() {
-        return this._lifeStack.length;
+        return this._roundStack.length;
     }
 
     init(w, h, rules, cellSize, cells) {
         this.rules = rules;
         this.cellSize = cellSize;
-        this.batchSize = this.batchMultiplier * this.cellSize;
         let workerData = {
             message: 'start',
             w: w,
             h: h,
             rules: rules,
-            generations: this.batchSize,
+            generations: this._roundStack.length - 1,
             cells: cells
         };
+        this.getSlotPointer = 0;
         this.wrkr.postMessage(workerData);
     }
 
@@ -68,31 +61,10 @@ export class LifeWorkerService {
         let workerData = {
             message: 'resume',
             rules: this.rules,
-            generations: this.batchSize,
+            generations: 1,
             cells: cells
         };
         this.wrkr.postMessage(workerData);
-    }
-
-    keepStack() {
-        let minStackSize = this.batchSize;
-        this.stackCheckHandle = setInterval(() => {
-            if (this.stackSize < this.batchSize) {
-                console.log('getBatch');
-                this.getBatch();
-                clearInterval(this.stackCheckHandle);
-            }
-        }, 100);
-    }
-
-    stop() {
-        let workerData = {
-            message: 'stop',
-        };
-        this.stopHandle = setInterval(() => {
-            this.wrkr.postMessage(workerData);
-            clearInterval(this.stackCheckHandle);
-        }, 10);
     }
 
 }

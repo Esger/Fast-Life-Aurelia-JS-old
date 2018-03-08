@@ -163,7 +163,7 @@ var conway = {
             // console.log('steps ', conway.lifeSteps);
         } else {
             clearInterval(conway.gogogo);
-            conway.sendReady();
+            // conway.sendReady();
             // console.log('ready ');
         }
         conway.lifeSteps += 1;

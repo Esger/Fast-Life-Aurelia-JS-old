@@ -13,11 +13,12 @@ export class LifeCustomElement {
     constructor(eventAggregator, lifeWorkerService) {
         this.ea = eventAggregator;
         this.lfWs = lifeWorkerService;
-        this.cellSize = 1;
+        this.cellSize = 2;
         this.cellsAlive = 0;
         this.fillRatio = 20;
         this.trails = true;
         this.speedHandle = null;
+        this.running = false;
         this.opacity = 1 - this.trails * 0.9;
     }
 
@@ -39,7 +40,9 @@ export class LifeCustomElement {
 
     animateStep() {
         this.drawFromStack();
-        setTimeout(() => { this.animateStep(); }, 0);
+        if (this.running) {
+            setTimeout(() => { this.animateStep(); });
+        }
     }
 
     drawFromStack() {
@@ -83,17 +86,21 @@ export class LifeCustomElement {
         this.lifeSteps = 0; // Number of iterations / steps done
         this.prevSteps = 0;
         this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, this.cellSize);
+        clearInterval(this.speedHandle);
         this.speedHandle = setInterval(() => { this.countGenerations(); }, 500);
     }
 
     addListeners() {
-        this.ea.subscribe('startRandom', () => {
-            this.animateStep();
+        this.ea.subscribe('clear', () => {
+            this.running = false;
+            this.initLife();
+            this.clearSpace();
         });
         this.ea.subscribe('stop', () => {
-            this.lfWs.stop();
+            this.running = false;
         });
         this.ea.subscribe('start', () => {
+            this.running = true;
             this.animateStep();
         });
         this.ea.subscribe('step', () => {

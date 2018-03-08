@@ -17,15 +17,11 @@
            class="startbutton"
            title="Start"
            click.delegate="start()"></a>
-        <a href="#"
-           class="randombutton"
-           title="Random"
-           click.delegate="random()"></a>
         <label><input 
             class="trails" 
             type="checkbox" 
             checked.bind="trails"
-            change.delegate="toggleTrails()" /> Trails ${trails}</label>
+            change.delegate="toggleTrails()" /> Trails</label>
     </life-controls>
     <stats></stats>
 </template>

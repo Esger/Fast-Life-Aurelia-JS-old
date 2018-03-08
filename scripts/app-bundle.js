@@ -116,10 +116,6 @@ define('resources/elements/controls',['exports', 'aurelia-framework', 'aurelia-e
             this.ea.publish('start');
         };
 
-        ControlsCustomElement.prototype.random = function random() {
-            this.ea.publish('startRandom');
-        };
-
         ControlsCustomElement.prototype.toggleTrails = function toggleTrails() {
             this.ea.publish('toggleTrails', this.trails);
         };
@@ -149,11 +145,12 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
 
             this.ea = eventAggregator;
             this.lfWs = lifeWorkerService;
-            this.cellSize = 1;
+            this.cellSize = 2;
             this.cellsAlive = 0;
             this.fillRatio = 20;
             this.trails = true;
             this.speedHandle = null;
+            this.running = false;
             this.opacity = 1 - this.trails * 0.9;
         }
 
@@ -177,9 +174,11 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             var _this = this;
 
             this.drawFromStack();
-            setTimeout(function () {
-                _this.animateStep();
-            }, 0);
+            if (this.running) {
+                setTimeout(function () {
+                    _this.animateStep();
+                });
+            }
         };
 
         LifeCustomElement.prototype.drawFromStack = function drawFromStack() {
@@ -222,6 +221,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.lifeSteps = 0;
             this.prevSteps = 0;
             this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, this.cellSize);
+            clearInterval(this.speedHandle);
             this.speedHandle = setInterval(function () {
                 _this2.countGenerations();
             }, 500);
@@ -230,13 +230,16 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         LifeCustomElement.prototype.addListeners = function addListeners() {
             var _this3 = this;
 
-            this.ea.subscribe('startRandom', function () {
-                _this3.animateStep();
+            this.ea.subscribe('clear', function () {
+                _this3.running = false;
+                _this3.initLife();
+                _this3.clearSpace();
             });
             this.ea.subscribe('stop', function () {
-                _this3.lfWs.stop();
+                _this3.running = false;
             });
             this.ea.subscribe('start', function () {
+                _this3.running = true;
                 _this3.animateStep();
             });
             this.ea.subscribe('step', function () {
@@ -360,28 +363,15 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
 
             this.ea = eventAggregator;
 
-            this._lifeStack = [];
-            this.batchMultiplier = 5;
-            this.stackCheckHandle = null;
-            this.stackLowCheckHandle = null;
-            this.stopHandle = null;
+            this._roundStack = [[], [], [], [], [], [], [], [], [], []];
+            this.fillSlotPointer = 0;
+            this.maxIndex = 9;
+            this.started = false;
             this.wrkr = new Worker('./assets/life-worker.js');
             this.wrkr.onmessage = function (e) {
-                if (e.data) {
-                    var message = e.data.message;
-                    switch (message) {
-                        case 'newGeneration':
-                            _this._lifeStack.push(e.data.cells);
-                            break;
-                        case 'ready':
-                            _this.keepStack();
-                            break;
-                        case 'stopAck':
-                            clearInterval(_this.stopHandle);
-                            break;
-                        default:
-                            break;
-                    }
+                if (e.data && e.data.message == 'newGeneration') {
+                    _this._roundStack[_this.fillSlotPointer] = e.data.cells;
+                    _this.fillSlotPointer = (_this.fillSlotPointer + 1) % _this._roundStack.length;
                 }
             };
         }
@@ -389,15 +379,15 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         LifeWorkerService.prototype.init = function init(w, h, rules, cellSize, cells) {
             this.rules = rules;
             this.cellSize = cellSize;
-            this.batchSize = this.batchMultiplier * this.cellSize;
             var workerData = {
                 message: 'start',
                 w: w,
                 h: h,
                 rules: rules,
-                generations: this.batchSize,
+                generations: this._roundStack.length - 1,
                 cells: cells
             };
+            this.getSlotPointer = 0;
             this.wrkr.postMessage(workerData);
         };
 
@@ -405,46 +395,33 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             var workerData = {
                 message: 'resume',
                 rules: this.rules,
-                generations: this.batchSize,
+                generations: 1,
                 cells: cells
             };
             this.wrkr.postMessage(workerData);
         };
 
-        LifeWorkerService.prototype.keepStack = function keepStack() {
-            var _this2 = this;
-
-            var minStackSize = this.batchSize;
-            this.stackCheckHandle = setInterval(function () {
-                if (_this2.stackSize < _this2.batchSize) {
-                    console.log('getBatch');
-                    _this2.getBatch();
-                    clearInterval(_this2.stackCheckHandle);
-                }
-            }, 100);
-        };
-
-        LifeWorkerService.prototype.stop = function stop() {
-            var _this3 = this;
-
-            var workerData = {
-                message: 'stop'
-            };
-            this.stopHandle = setInterval(function () {
-                _this3.wrkr.postMessage(workerData);
-                clearInterval(_this3.stackCheckHandle);
-            }, 10);
-        };
-
         _createClass(LifeWorkerService, [{
             key: 'cells',
             get: function get() {
-                return this._lifeStack.shift();
+                var _this2 = this;
+
+                var pointer = this.getSlotPointer;
+                this.getSlotPointer = (this.getSlotPointer + 1) % this._roundStack.length;
+                if (this.started) {
+                    var emptySlotPointer = pointer == 0 ? this.maxIndex : pointer - 1;
+
+                    setTimeout(function () {
+                        _this2.getBatch();
+                    });
+                }
+                this.started = true;
+                return this._roundStack[pointer];
             }
         }, {
             key: 'stackSize',
             get: function get() {
-                return this._lifeStack.length;
+                return this._roundStack.length;
             }
         }]);
 
@@ -452,8 +429,8 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
     }()) || _class);
 });
 define('text!app.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/main\"></require>\n    <main></main>\n</template>"; });
-define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/stats\"></require>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n        <a href=\"#\"\n           class=\"randombutton\"\n           title=\"Random\"\n           click.delegate=\"random()\"></a>\n        <label><input \n            class=\"trails\" \n            type=\"checkbox\" \n            checked.bind=\"trails\"\n            change.delegate=\"toggleTrails()\" /> Trails ${trails}</label>\n    </life-controls>\n    <stats></stats>\n</template>"; });
+define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/stats\"></require>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n        <label><input \n            class=\"trails\" \n            type=\"checkbox\" \n            checked.bind=\"trails\"\n            change.delegate=\"toggleTrails()\" /> Trails</label>\n    </life-controls>\n    <stats></stats>\n</template>"; });
 define('text!resources/elements/life.html', ['module'], function(module) { module.exports = "<template>\n    <canvas id=\"life\"\n            width=\"750\"\n            height=\"464\">\n    </canvas>\n</template>"; });
 define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <require from=\"resources/elements/controls\"></require>\n    <h1>Fast Life | AureliaJS</h1>\n    <life></life>\n    <controls></controls>\n</template>"; });
-define('text!resources/elements/stats.html', ['module'], function(module) { module.exports = "<template>\n    <p>generations: ${generations} | cells: ${cellCount} | stack: ${stackSize} | ${speed} gen/s</p>\n</template>"; });
+define('text!resources/elements/stats.html', ['module'], function(module) { module.exports = "<template>\n    <p>generations: ${generations} | cells: ${cellCount} | ${speed} gen/s</p>\n</template>"; });
 //# sourceMappingURL=app-bundle.js.map

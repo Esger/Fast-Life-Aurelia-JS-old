@@ -13,17 +13,11 @@ export class LifeWorkerService {
     constructor(eventAggregator) {
         this.ea = eventAggregator;
 
-        this._roundStack = [[], [], [], [], [], [], [], [], [], []];
+        this.emptyStack = [[], [], [], [], [], [], [], [], [], []];
+        this._roundStack = this.emptyStack.slice();
         this.fillSlotPointer = 0;
         this.maxIndex = 9;
         this.started = false;
-        this.wrkr = new Worker('./assets/life-worker.js');
-        this.wrkr.onmessage = (e) => {
-            if (e.data && e.data.message == 'newGeneration') {
-                this._roundStack[this.fillSlotPointer] = e.data.cells;
-                this.fillSlotPointer = (this.fillSlotPointer + 1) % this._roundStack.length;
-            }
-        };
     }
 
     get cells() {
@@ -43,6 +37,17 @@ export class LifeWorkerService {
     }
 
     init(w, h, rules, cellSize, cells) {
+        if (this.wrkr) {
+            this.wrkr.terminate();
+        }
+        this.wrkr = new Worker('./assets/life-worker.js');
+        this.wrkr.onmessage = (e) => {
+            if (e.data && e.data.message == 'newGeneration') {
+                this._roundStack[this.fillSlotPointer] = e.data.cells;
+                this.fillSlotPointer = (this.fillSlotPointer + 1) % this._roundStack.length;
+            }
+        };
+        this._roundStack = this.emptyStack.slice();
         this.rules = rules;
         this.cellSize = cellSize;
         let workerData = {

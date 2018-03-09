@@ -12,8 +12,13 @@ export class ControlsCustomElement {
         this.ea = eventAggregator;
         this.trails = true;
         this.pulsor = true;
-        this.minCellSize = 1;
-        this.maxCellSize = 32;
+        this.cellSizeExp = 1;
+        this.minCellSize = 0;
+        this.maxCellSize = 5;
+    }
+
+    get cellSize() {
+        return Math.pow(2, this.cellSizeExp);
     }
 
     clear() {
@@ -33,8 +38,8 @@ export class ControlsCustomElement {
     toggleTrails() {
         this.ea.publish('toggleTrails', this.trails);
     }
-    setCellSize(element) {
-        console.log(element.val());
+    setCellSize() {
+        this.ea.publish('cellSize', this.cellSize);
     }
 
 }

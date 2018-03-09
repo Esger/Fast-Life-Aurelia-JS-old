@@ -13,6 +13,7 @@ controls {
             margin-right     : 2px;
             background-image : url("./buttons.gif");
             background-repeat: no-repeat;
+            background-color : transparent;
         }
 
         label {
@@ -31,6 +32,7 @@ controls {
                 line-height     : 21px;
                 padding         : 0 20px 0 10px;
                 border-radius   : 2px;
+                cursor          : pointer;
 
                 &::before {
                     content: '√';
@@ -96,6 +98,40 @@ controls {
 
             &:hover {
                 background-position: -50px -125px;
+            }
+        }
+
+        .pulsor {
+            box-shadow       : 0 0 30px rgba(255,255,255,1);
+            -webkit-animation: pulsate 1s infinite alternate;
+            -moz-animation   : pulsate 1s infinite alternate;
+            -animation       : pulsate 1s infinite alternate;
+        }
+        @-webkit-keyframes pulsate {
+            from {
+                box-shadow: 0 0 10px rgba(255,255,255,0);
+            }
+
+            to {
+                box-shadow: 0 0 20px rgba(255,255,255,1);
+            }
+        }
+        @-moz-keyframes pulsate {
+            from {
+                box-shadow: 0 0 10px rgba(255,255,255,0);
+            }
+
+            to {
+                box-shadow: 0 0 20px rgba(255,255,255,1);
+            }
+        }
+        @keyframes pulsate {
+            from {
+                box-shadow: 0 0 10px rgba(255,255,255,0);
+            }
+
+            to {
+                box-shadow: 0 0 20px rgba(255,255,255,1);
             }
         }
     }

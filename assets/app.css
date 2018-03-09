@@ -132,6 +132,7 @@ controls life-controls a {
   margin-right: 2px;
   background-image: url("buttons.gif");
   background-repeat: no-repeat;
+  background-color: transparent;
 }
 controls life-controls label {
   font-size: 14px;
@@ -148,6 +149,7 @@ controls life-controls [type=checkbox] + label {
   line-height: 21px;
   padding: 0 20px 0 10px;
   border-radius: 2px;
+  cursor: pointer;
 }
 controls life-controls [type=checkbox] + label::before {
   content: '√';
@@ -198,6 +200,36 @@ controls life-controls .randombutton {
 controls life-controls .randombutton:hover {
   background-position: -50px -125px;
 }
+controls life-controls .pulsor {
+  box-shadow: 0 0 30px #ffffff;
+  -webkit-animation: pulsate 1s infinite alternate;
+  -moz-animation: pulsate 1s infinite alternate;
+  -animation: pulsate 1s infinite alternate;
+}
+@-webkit-keyframes pulsate {
+  from {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0);
+  }
+  to {
+    box-shadow: 0 0 20px #ffffff;
+  }
+}
+@-moz-keyframes pulsate {
+  from {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0);
+  }
+  to {
+    box-shadow: 0 0 20px #ffffff;
+  }
+}
+@keyframes pulsate {
+  from {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0);
+  }
+  to {
+    box-shadow: 0 0 20px #ffffff;
+  }
+}
 life {
   display: block;
   margin: 18px 0;
@@ -217,6 +249,9 @@ h1 {
   line-height: 24px;
   display: flex;
   justify-content: space-between;
+}
+h1 a {
+  font-weight: lighter;
 }
 a {
   color: #333;

@@ -13,7 +13,7 @@ export class LifeCustomElement {
     constructor(eventAggregator, lifeWorkerService) {
         this.ea = eventAggregator;
         this.lfWs = lifeWorkerService;
-        this.cellSize = 2;
+        this.cellSize = 8;
         this.cellsAlive = 0;
         this.trails = true;
         this.speedHandle = null;
@@ -42,7 +42,7 @@ export class LifeCustomElement {
 
     get meanOver20Gens() {
         this.cellCounts.push(this.cellsAlive);
-        this.cellCounts = this.cellCounts.slice(-10);
+        this.cellCounts = this.cellCounts.slice(-100);
         const average = arr => arr.reduce((p, c) => p + c, 0) / arr.length;
         return average(this.cellCounts);
     }

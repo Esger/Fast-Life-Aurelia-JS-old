@@ -18,12 +18,12 @@
            class.bind="pulsor ? 'pulsor' : ''"
            title="Start"
            click.delegate="start()"></a>
-        <input class="trails"
-               id="trails"
+        <input id="trails"
                type="checkbox"
                checked.bind="trails"
                change.delegate="toggleTrails()" />
-        <label for="trails"> Trails</label>
+        <label class="trails"
+               for="trails"> Trails</label>
         <input class="cellSize"
                type="range"
                title="cell size ${cellSize}"

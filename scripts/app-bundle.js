@@ -215,8 +215,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.ea.publish('stats', {
                 cellCount: this.cellsAlive,
                 generations: this.lifeSteps,
-                speed: this.speed * 2,
-                stackSize: this.lfWs.stackSize
+                speed: this.speed * 2
             });
         };
 
@@ -233,6 +232,8 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
                 setTimeout(function () {
                     _this.animateStep();
                 });
+            } else {
+                this.stop();
             }
         };
 
@@ -274,28 +275,43 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
 
             this.liferules = [false, false, false, true, false, false, false, false, false, false, false, false, true, true, false, false, false, false, false];
             this.lifeSteps = 0;
-            this.prevSteps = 0;
             this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, this.cellSize);
-            clearInterval(this.speedHandle);
+            if (this.speedHandle) {
+                clearInterval(this.speedHandle);
+            }
             this.speedHandle = setInterval(function () {
                 _this2.showStats();
             }, 500);
+        };
+
+        LifeCustomElement.prototype.clear = function clear() {
+            this.running = false;
+            this.initLife();
+            this.clearSpace();
+        };
+
+        LifeCustomElement.prototype.stop = function stop() {
+            this.running = false;
+            clearInterval(this.speedHandle);
+            setTimeout(this.showStats, 500);
+        };
+
+        LifeCustomElement.prototype.start = function start() {
+            this.running = true;
+            this.animateStep();
         };
 
         LifeCustomElement.prototype.addListeners = function addListeners() {
             var _this3 = this;
 
             this.ea.subscribe('clear', function () {
-                _this3.running = false;
-                _this3.initLife();
-                _this3.clearSpace();
+                _this3.clear();
             });
             this.ea.subscribe('stop', function () {
-                _this3.running = false;
+                _this3.stop();
             });
             this.ea.subscribe('start', function () {
-                _this3.running = true;
-                _this3.animateStep();
+                _this3.start();
             });
             this.ea.subscribe('step', function () {
                 _this3.drawFromStack();
@@ -305,9 +321,14 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
                 _this3.opacity = 1 - _this3.trails * 0.9;
             });
             this.ea.subscribe('cellSize', function (response) {
-                _this3.running = false;
                 _this3.cellSize = response;
+                _this3.stop();
                 _this3.initLife();
+                _this3.start();
+            });
+            this.ea.subscribe('lifeRules', function (response) {
+                _this3.liferules = response;
+                _this3.lfWs.changeRules(_this3.liferules);
             });
         };
 
@@ -336,7 +357,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
                 } else {
                     this.stableCountDown = 20;
                 }
-                return this.stableCountDown == 0;
+                return this.stableCountDown <= 0;
             }
         }]);
 
@@ -480,6 +501,14 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             this.wrkr.postMessage(workerData);
         };
 
+        LifeWorkerService.prototype.changeRules = function changeRules(rules) {
+            var workerData = {
+                message: 'rules',
+                rules: rules
+            };
+            this.wrkr.postMessage(workerData);
+        };
+
         LifeWorkerService.prototype.getBatch = function getBatch(cells) {
             var workerData = {
                 message: 'resume',
@@ -517,9 +546,42 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         return LifeWorkerService;
     }()) || _class);
 });
+define('resources/elements/tabs',['exports', 'aurelia-framework', 'aurelia-event-aggregator'], function (exports, _aureliaFramework, _aureliaEventAggregator) {
+    'use strict';
+
+    Object.defineProperty(exports, "__esModule", {
+        value: true
+    });
+    exports.TabsCustomElement = undefined;
+
+    function _classCallCheck(instance, Constructor) {
+        if (!(instance instanceof Constructor)) {
+            throw new TypeError("Cannot call a class as a function");
+        }
+    }
+
+    var _dec, _class;
+
+    var TabsCustomElement = exports.TabsCustomElement = (_dec = (0, _aureliaFramework.inject)(_aureliaEventAggregator.EventAggregator), _dec(_class = function () {
+        function TabsCustomElement(eventAggregator) {
+            _classCallCheck(this, TabsCustomElement);
+
+            this.ea = eventAggregator;
+            this.liferules = [false, false, false, true, false, false, false, false, false, false, false, false, true, true, false, false, false, false, false];
+        }
+
+        TabsCustomElement.prototype.setRules = function setRules(i) {
+            this.liferules[i] = !this.liferules[i];
+            this.ea.publish('lifeRules', this.liferules);
+        };
+
+        return TabsCustomElement;
+    }()) || _class);
+});
 define('text!app.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/main\"></require>\n    <main></main>\n</template>"; });
-define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/stats\"></require>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           class.bind=\"pulsor ? 'pulsor' : ''\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n        <input class=\"trails\"\n               id=\"trails\"\n               type=\"checkbox\"\n               checked.bind=\"trails\"\n               change.delegate=\"toggleTrails()\" />\n        <label for=\"trails\"> Trails</label>\n        <input class=\"cellSize\"\n               type=\"range\"\n               title=\"cell size ${cellSize}\"\n               min.one-time=\"minCellSize\"\n               max.one-time=\"maxCellSize\"\n               value.bind=\"cellSizeExp\"\n               change.delegate=\"setCellSize()\">\n        <output value.bind=\"cellSize\"></output>\n    </life-controls>\n    <stats></stats>\n</template>"; });
+define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/stats\"></require>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           class.bind=\"pulsor ? 'pulsor' : ''\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n        <input id=\"trails\"\n               type=\"checkbox\"\n               checked.bind=\"trails\"\n               change.delegate=\"toggleTrails()\" />\n        <label class=\"trails\"\n               for=\"trails\"> Trails</label>\n        <input class=\"cellSize\"\n               type=\"range\"\n               title=\"cell size ${cellSize}\"\n               min.one-time=\"minCellSize\"\n               max.one-time=\"maxCellSize\"\n               value.bind=\"cellSizeExp\"\n               change.delegate=\"setCellSize()\">\n        <output value.bind=\"cellSize\"></output>\n    </life-controls>\n    <stats></stats>\n</template>"; });
 define('text!resources/elements/life.html', ['module'], function(module) { module.exports = "<template>\n    <canvas id=\"life\"\n            width=\"750\"\n            height=\"464\">\n    </canvas>\n</template>"; });
-define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <require from=\"resources/elements/controls\"></require>\n    <h1>Fast Life | AureliaJS<a href=\"/\">ashWare</a></h1>\n    <life></life>\n    <controls></controls>\n</template>"; });
+define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <require from=\"resources/elements/controls\"></require>\n    <require from=\"resources/elements/tabs\"></require>\n    <h1>Fast Life | AureliaJS<a href=\"/\">ashWare</a></h1>\n    <life></life>\n    <controls></controls>\n    <tabs></tabs>\n</template>"; });
 define('text!resources/elements/stats.html', ['module'], function(module) { module.exports = "<template>\n    <p>generations: ${generations} | cells: ${cellCount} | ${speed} gen/s</p>\n</template>"; });
+define('text!resources/elements/tabs.html', ['module'], function(module) { module.exports = "<template>\n    <tab-buttons>\n        <tab-button click.delegate=\"activateTab(1)\"\n                    class=\"active\">Life Rules</tab-button>\n        <tab-button click.delegate=\"activateTab(2)\">Story</tab-button>\n    </tab-buttons>\n    <tab-contents>\n        <tab-content class=\"lifeRules\">\n            <row-labels>\n                <p title=\"Neighbour count to stay alive\">Stay</p>\n                <p title=\"Neighbour count to come alive\">New</p>\n            </row-labels>\n            <life-rules>\n                <life-rule repeat.for=\"rule of liferules\"\n                           if.bind=\"$index !== 9\">\n                    <input type=\"checkbox\"\n                           checked.bind=\"rule\"\n                           id.one-time=\"'rule_'+$index\"\n                           change.delegate=\"setRules($index)\">\n                    <label for.one-time=\"'rule_'+$index\">${$index % 10}</label>\n                </life-rule>\n            </life-rules>\n        </tab-content>\n    </tab-contents>\n</template>"; });
 //# sourceMappingURL=app-bundle.js.map

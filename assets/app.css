@@ -120,6 +120,7 @@ body {
 controls {
   display: flex;
   justify-content: space-between;
+  margin-bottom: 36px;
 }
 controls life-controls {
   display: flex;
@@ -131,44 +132,6 @@ controls life-controls a {
   height: 21px;
   margin-right: 2px;
   background-color: transparent;
-}
-controls life-controls label {
-  font-size: 14px;
-}
-controls life-controls input + output {
-  margin-left: 5px;
-}
-controls life-controls [type=checkbox] {
-  transform: scale(0.000001);
-}
-controls life-controls [type=checkbox] + label {
-  display: flex;
-  font-weight: bold;
-  color: #dd0;
-  background-color: #8a8a00;
-  height: 21px;
-  line-height: 21px;
-  padding: 0 20px 0 10px;
-  border-radius: 2px;
-  margin-right: 20px;
-  cursor: pointer;
-}
-controls life-controls [type=checkbox] + label::before {
-  content: '√';
-  flex: 1 0 15px;
-  opacity: 0;
-}
-controls life-controls [type=checkbox] + label::after {
-  content: '';
-  flex: 0 0 1px;
-  opacity: 0;
-}
-controls life-controls [type=checkbox]:checked + label {
-  color: whitesmoke;
-}
-controls life-controls [type=checkbox]:checked + label::after,
-controls life-controls [type=checkbox]:checked + label::before {
-  opacity: 1;
 }
 controls life-controls [class*=button] {
   margin-right: 10px;
@@ -230,6 +193,9 @@ controls life-controls .stepbutton {
 controls life-controls .stepbutton:hover {
   border-left-color: whitesmoke;
 }
+controls life-controls .trails {
+  margin-left: 20px;
+}
 controls life-controls .pulsor:not(:hover),
 controls life-controls .pulsor:not(:hover)::after,
 controls life-controls .pulsor:not(:hover)::before {
@@ -287,4 +253,93 @@ h1 a {
 }
 a {
   color: #333;
+}
+label {
+  font-size: 14px;
+}
+input + output {
+  margin-left: 5px;
+}
+[type=checkbox] {
+  display: none;
+}
+[type=checkbox] + label {
+  display: flex;
+  font-weight: bold;
+  color: #dd0;
+  background-color: #8a8a00;
+  height: 21px;
+  line-height: 21px;
+  padding: 0 20px 0 10px;
+  border-radius: 2px;
+  margin-right: 20px;
+  cursor: pointer;
+}
+[type=checkbox] + label::before {
+  content: '\2713';
+  flex: 1 0 15px;
+  padding-top: 1px;
+  opacity: 0;
+}
+[type=checkbox] + label::after {
+  content: '';
+  flex: 0 0 1px;
+  opacity: 0;
+}
+[type=checkbox]:checked + label {
+  color: whitesmoke;
+}
+[type=checkbox]:checked + label::after,
+[type=checkbox]:checked + label::before {
+  opacity: 1;
+}
+tabs {
+  display: block;
+}
+tab-buttons {
+  display: flex;
+  margin-bottom: -2px;
+}
+tab-button {
+  padding: 2px 10px 0;
+  border: 2px solid #8a8a00;
+  border-radius: 3px;
+}
+tab-button.active {
+  border-bottom-color: #dd0;
+}
+tab-button + tab-button {
+  margin-left: 5px;
+}
+tab-contents {
+  display: block;
+}
+tab-content {
+  border: 2px solid #8a8a00;
+  border-radius: 0 3px 3px 3px;
+  padding: 20px 10px 10px;
+}
+life-rules {
+  display: flex;
+  flex-wrap: wrap;
+}
+life-rules [type=checkbox] + label {
+  min-width: 30px;
+  padding: 0 10px;
+}
+life-rule,
+row-labels p {
+  margin-bottom: 10px;
+}
+.lifeRules {
+  display: flex;
+}
+.lifeRules row-labels {
+  margin-right: 20px;
+}
+.lifeRules row-labels p {
+  line-height: 20px;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }

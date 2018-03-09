@@ -62,6 +62,14 @@ export class LifeWorkerService {
         this.wrkr.postMessage(workerData);
     }
 
+    changeRules(rules) {
+        let workerData = {
+            message: 'rules',
+            rules: rules
+        };
+        this.wrkr.postMessage(workerData);
+    }
+
     getBatch(cells) {
         let workerData = {
             message: 'resume',

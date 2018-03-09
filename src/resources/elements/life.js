@@ -30,8 +30,7 @@ export class LifeCustomElement {
         this.ea.publish('stats', {
             cellCount: this.cellsAlive,
             generations: this.lifeSteps,
-            speed: this.speed * 2,
-            stackSize: this.lfWs.stackSize
+            speed: this.speed * 2
         });
     }
 
@@ -53,13 +52,15 @@ export class LifeCustomElement {
         } else {
             this.stableCountDown = 20;
         }
-        return this.stableCountDown == 0;
+        return this.stableCountDown <= 0;
     }
 
     animateStep() {
         this.drawFromStack();
         if (this.running && !this.stable) {
             setTimeout(() => { this.animateStep(); });
+        } else {
+            this.stop();
         }
     }
 
@@ -102,24 +103,39 @@ export class LifeCustomElement {
             false, false, true, true, false, false, false, false, false
         ];
         this.lifeSteps = 0; // Number of iterations / steps done
-        this.prevSteps = 0;
         this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, this.cellSize);
-        clearInterval(this.speedHandle);
+        if (this.speedHandle) {
+            clearInterval(this.speedHandle);
+        }
         this.speedHandle = setInterval(() => { this.showStats(); }, 500);
+    }
+
+    clear() {
+        this.running = false;
+        this.initLife();
+        this.clearSpace();
+    }
+
+    stop() {
+        this.running = false;
+        clearInterval(this.speedHandle);
+        setTimeout(this.showStats, 500);
+    }
+
+    start() {
+        this.running = true;
+        this.animateStep();
     }
 
     addListeners() {
         this.ea.subscribe('clear', () => {
-            this.running = false;
-            this.initLife();
-            this.clearSpace();
+            this.clear();
         });
         this.ea.subscribe('stop', () => {
-            this.running = false;
+            this.stop();
         });
         this.ea.subscribe('start', () => {
-            this.running = true;
-            this.animateStep();
+            this.start();
         });
         this.ea.subscribe('step', () => {
             this.drawFromStack();
@@ -129,9 +145,14 @@ export class LifeCustomElement {
             this.opacity = 1 - this.trails * 0.9;
         });
         this.ea.subscribe('cellSize', response => {
-            this.running = false;
             this.cellSize = response;
+            this.stop();
             this.initLife();
+            this.start();
+        });
+        this.ea.subscribe('lifeRules', response => {
+            this.liferules = response;
+            this.lfWs.changeRules(this.liferules);
         });
     }
 

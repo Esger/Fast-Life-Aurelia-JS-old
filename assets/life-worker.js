@@ -160,11 +160,9 @@ var conway = {
             conway.updateNeighbours();
             conway.evalNeighbours();
             conway.sendScreen();
-            // console.log('steps ', conway.lifeSteps);
         } else {
             clearInterval(conway.gogogo);
             // conway.sendReady();
-            // console.log('ready ');
         }
         conway.lifeSteps += 1;
         // conway.addNewLifeCells();
@@ -187,6 +185,9 @@ onmessage = function (e) {
                 break;
             case 'stop':
                 conway.stop();
+                break;
+            case 'rules':
+                conway.liferules = data.rules;
                 break;
             case 'resume':
                 conway.resume(data.rules, data.generations, data.cells);

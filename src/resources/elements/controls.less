@@ -1,6 +1,7 @@
 controls {
     display        : flex;
     justify-content: space-between;
+    margin-bottom  : 36px;
 
     life-controls {
         display        : flex;
@@ -12,54 +13,6 @@ controls {
             height          : 21px;
             margin-right    : 2px;
             background-color: transparent;
-        }
-
-        label {
-            font-size: 14px;
-        }
-
-        input+output {
-            margin-left: 5px;
-        }
-
-        [type=checkbox] {
-            transform: scale(0.000001);
-
-            &+label {
-                display         : flex;
-                font-weight     : bold;
-                color           : #dd0;
-                background-color: #8a8a00;
-                height          : 21px;
-                line-height     : 21px;
-                padding         : 0 20px 0 10px;
-                border-radius   : 2px;
-                margin-right    : 20px;
-                cursor          : pointer;
-
-                &::before {
-                    content: '√';
-                    flex   : 1 0 15px;
-                    opacity: 0;
-                }
-
-                &::after {
-                    content: '';
-                    flex   : 0 0 1px;
-                    opacity: 0;
-                }
-            }
-
-            &:checked {
-                &+label {
-                    color: whitesmoke;
-
-                    &::after, &::before {
-                        opacity: 1;
-                    }
-                }
-            }
-
         }
 
         [class*=button] {
@@ -132,6 +85,10 @@ controls {
             &:hover {
                 border-left-color: whitesmoke;
             }
+        }
+
+        .trails {
+            margin-left: 20px;
         }
 
         .pulsor:not(:hover), .pulsor:not(:hover)::after, .pulsor:not(:hover)::before {

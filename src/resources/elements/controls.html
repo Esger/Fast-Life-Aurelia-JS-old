@@ -26,10 +26,12 @@
         <label for="trails"> Trails</label>
         <input class="cellSize"
                type="range"
+               title="cell size ${cellSize}"
                min.one-time="minCellSize"
                max.one-time="maxCellSize"
-               value="2"
+               value.bind="cellSizeExp"
                change.delegate="setCellSize()">
+        <output value.bind="cellSize"></output>
     </life-controls>
     <stats></stats>
 </template>

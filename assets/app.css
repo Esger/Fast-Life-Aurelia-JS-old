@@ -135,6 +135,9 @@ controls life-controls a {
 controls life-controls label {
   font-size: 14px;
 }
+controls life-controls input + output {
+  margin-left: 5px;
+}
 controls life-controls [type=checkbox] {
   transform: scale(0.000001);
 }

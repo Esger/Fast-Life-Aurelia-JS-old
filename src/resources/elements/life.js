@@ -13,7 +13,7 @@ export class LifeCustomElement {
     constructor(eventAggregator, lifeWorkerService) {
         this.ea = eventAggregator;
         this.lfWs = lifeWorkerService;
-        this.cellSize = 1;
+        this.cellSize = 2;
         this.cellsAlive = 0;
         this.trails = true;
         this.speedHandle = null;
@@ -24,7 +24,7 @@ export class LifeCustomElement {
         this.stableCountDown = 20;
     }
 
-    countGenerations() {
+    showStats() {
         this.speed = this.lifeSteps - this.prevSteps;
         this.prevSteps = this.lifeSteps;
         this.ea.publish('stats', {
@@ -105,7 +105,7 @@ export class LifeCustomElement {
         this.prevSteps = 0;
         this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, this.cellSize);
         clearInterval(this.speedHandle);
-        this.speedHandle = setInterval(() => { this.countGenerations(); }, 500);
+        this.speedHandle = setInterval(() => { this.showStats(); }, 500);
     }
 
     addListeners() {
@@ -127,6 +127,11 @@ export class LifeCustomElement {
         this.ea.subscribe('toggleTrails', () => {
             this.trails = !this.trails;
             this.opacity = 1 - this.trails * 0.9;
+        });
+        this.ea.subscribe('cellSize', response => {
+            this.running = false;
+            this.cellSize = response;
+            this.initLife();
         });
     }
 

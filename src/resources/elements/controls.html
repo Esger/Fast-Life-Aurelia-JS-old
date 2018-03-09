@@ -24,6 +24,12 @@
                checked.bind="trails"
                change.delegate="toggleTrails()" />
         <label for="trails"> Trails</label>
+        <input class="cellSize"
+               type="range"
+               min.one-time="minCellSize"
+               max.one-time="maxCellSize"
+               value="2"
+               change.delegate="setCellSize()">
     </life-controls>
     <stats></stats>
 </template>

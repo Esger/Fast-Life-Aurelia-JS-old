@@ -13,7 +13,7 @@ export class LifeCustomElement {
     constructor(eventAggregator, lifeWorkerService) {
         this.ea = eventAggregator;
         this.lfWs = lifeWorkerService;
-        this.cellSize = 8;
+        this.cellSize = 1;
         this.cellsAlive = 0;
         this.trails = true;
         this.speedHandle = null;
@@ -40,7 +40,7 @@ export class LifeCustomElement {
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
-    get meanOver20Gens() {
+    get meanOver100Gens() {
         this.cellCounts.push(this.cellsAlive);
         this.cellCounts = this.cellCounts.slice(-100);
         const average = arr => arr.reduce((p, c) => p + c, 0) / arr.length;
@@ -48,7 +48,7 @@ export class LifeCustomElement {
     }
 
     get stable() {
-        if (Math.abs(this.meanOver20Gens - this.cellsAlive) < 7) {
+        if (Math.abs(this.meanOver100Gens - this.cellsAlive) < 7) {
             this.stableCountDown -= 1;
         } else {
             this.stableCountDown = 20;

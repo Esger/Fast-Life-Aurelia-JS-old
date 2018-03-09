@@ -99,6 +99,8 @@ define('resources/elements/controls',['exports', 'aurelia-framework', 'aurelia-e
             this.ea = eventAggregator;
             this.trails = true;
             this.pulsor = true;
+            this.minCellSize = 1;
+            this.maxCellSize = 32;
         }
 
         ControlsCustomElement.prototype.clear = function clear() {
@@ -121,6 +123,10 @@ define('resources/elements/controls',['exports', 'aurelia-framework', 'aurelia-e
 
         ControlsCustomElement.prototype.toggleTrails = function toggleTrails() {
             this.ea.publish('toggleTrails', this.trails);
+        };
+
+        ControlsCustomElement.prototype.setCellSize = function setCellSize(element) {
+            console.log(element.val());
         };
 
         return ControlsCustomElement;
@@ -166,7 +172,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
 
             this.ea = eventAggregator;
             this.lfWs = lifeWorkerService;
-            this.cellSize = 8;
+            this.cellSize = 1;
             this.cellsAlive = 0;
             this.trails = true;
             this.speedHandle = null;
@@ -280,7 +286,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         };
 
         _createClass(LifeCustomElement, [{
-            key: 'meanOver20Gens',
+            key: 'meanOver100Gens',
             get: function get() {
                 this.cellCounts.push(this.cellsAlive);
                 this.cellCounts = this.cellCounts.slice(-100);
@@ -294,7 +300,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         }, {
             key: 'stable',
             get: function get() {
-                if (Math.abs(this.meanOver20Gens - this.cellsAlive) < 7) {
+                if (Math.abs(this.meanOver100Gens - this.cellsAlive) < 7) {
                     this.stableCountDown -= 1;
                 } else {
                     this.stableCountDown = 20;
@@ -476,7 +482,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
     }()) || _class);
 });
 define('text!app.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/main\"></require>\n    <main></main>\n</template>"; });
-define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/stats\"></require>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           class.bind=\"pulsor ? 'pulsor' : ''\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n        <input class=\"trails\"\n               id=\"trails\"\n               type=\"checkbox\"\n               checked.bind=\"trails\"\n               change.delegate=\"toggleTrails()\" />\n        <label for=\"trails\"> Trails</label>\n    </life-controls>\n    <stats></stats>\n</template>"; });
+define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/stats\"></require>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           class.bind=\"pulsor ? 'pulsor' : ''\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n        <input class=\"trails\"\n               id=\"trails\"\n               type=\"checkbox\"\n               checked.bind=\"trails\"\n               change.delegate=\"toggleTrails()\" />\n        <label for=\"trails\"> Trails</label>\n        <input class=\"cellSize\"\n               type=\"range\"\n               min.one-time=\"minCellSize\"\n               max.one-time=\"maxCellSize\"\n               value=\"2\"\n               change.delegate=\"setCellSize()\">\n    </life-controls>\n    <stats></stats>\n</template>"; });
 define('text!resources/elements/life.html', ['module'], function(module) { module.exports = "<template>\n    <canvas id=\"life\"\n            width=\"750\"\n            height=\"464\">\n    </canvas>\n</template>"; });
 define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <require from=\"resources/elements/controls\"></require>\n    <h1>Fast Life | AureliaJS<a href=\"/\">ashWare</a></h1>\n    <life></life>\n    <controls></controls>\n</template>"; });
 define('text!resources/elements/stats.html', ['module'], function(module) { module.exports = "<template>\n    <p>generations: ${generations} | cells: ${cellCount} | ${speed} gen/s</p>\n</template>"; });

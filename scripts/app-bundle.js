@@ -76,6 +76,126 @@ define('resources/index',["exports"], function (exports) {
   exports.configure = configure;
   function configure(config) {}
 });
+define('resources/services/life-worker-service',['exports', 'aurelia-framework', 'aurelia-event-aggregator'], function (exports, _aureliaFramework, _aureliaEventAggregator) {
+    'use strict';
+
+    Object.defineProperty(exports, "__esModule", {
+        value: true
+    });
+    exports.LifeWorkerService = undefined;
+
+    function _classCallCheck(instance, Constructor) {
+        if (!(instance instanceof Constructor)) {
+            throw new TypeError("Cannot call a class as a function");
+        }
+    }
+
+    var _createClass = function () {
+        function defineProperties(target, props) {
+            for (var i = 0; i < props.length; i++) {
+                var descriptor = props[i];
+                descriptor.enumerable = descriptor.enumerable || false;
+                descriptor.configurable = true;
+                if ("value" in descriptor) descriptor.writable = true;
+                Object.defineProperty(target, descriptor.key, descriptor);
+            }
+        }
+
+        return function (Constructor, protoProps, staticProps) {
+            if (protoProps) defineProperties(Constructor.prototype, protoProps);
+            if (staticProps) defineProperties(Constructor, staticProps);
+            return Constructor;
+        };
+    }();
+
+    var _dec, _class;
+
+    var LifeWorkerService = exports.LifeWorkerService = (_dec = (0, _aureliaFramework.inject)(_aureliaEventAggregator.EventAggregator), _dec(_class = function () {
+        function LifeWorkerService(eventAggregator) {
+            _classCallCheck(this, LifeWorkerService);
+
+            this.ea = eventAggregator;
+
+            this.emptyStack = [[], [], [], [], [], [], [], [], [], []];
+            this._roundStack = this.emptyStack.slice();
+            this.fillSlotPointer = 0;
+            this.maxIndex = 9;
+            this.started = false;
+        }
+
+        LifeWorkerService.prototype.init = function init(w, h, rules, cellSize, cells) {
+            var _this = this;
+
+            if (this.wrkr) {
+                this.wrkr.terminate();
+            }
+            this.wrkr = new Worker('./assets/life-worker.js');
+            this.wrkr.onmessage = function (e) {
+                if (e.data && e.data.message == 'newGeneration') {
+                    _this._roundStack[_this.fillSlotPointer] = e.data.cells;
+                    _this.fillSlotPointer = (_this.fillSlotPointer + 1) % _this._roundStack.length;
+                }
+            };
+            this._roundStack = this.emptyStack.slice();
+            this.rules = rules;
+            this.cellSize = cellSize;
+            var workerData = {
+                message: 'start',
+                w: w,
+                h: h,
+                rules: rules,
+                generations: this._roundStack.length - 1,
+                cells: cells
+            };
+            this.getSlotPointer = 0;
+            this.wrkr.postMessage(workerData);
+        };
+
+        LifeWorkerService.prototype.changeRules = function changeRules(rules) {
+            var workerData = {
+                message: 'rules',
+                rules: rules
+            };
+            this.wrkr.postMessage(workerData);
+        };
+
+        LifeWorkerService.prototype.getBatch = function getBatch(cells) {
+            var workerData = {
+                message: 'resume',
+                rules: this.rules,
+                generations: 1,
+                cells: cells
+            };
+            this.wrkr.postMessage(workerData);
+        };
+
+        _createClass(LifeWorkerService, [{
+            key: 'cells',
+            get: function get() {
+                var _this2 = this;
+
+                var pointer = this.getSlotPointer;
+                this.getSlotPointer = (this.getSlotPointer + 1) % this._roundStack.length;
+                if (this.started) {
+                    var emptySlotPointer = pointer == 0 ? this.maxIndex : pointer - 1;
+
+                    setTimeout(function () {
+                        _this2.getBatch();
+                    });
+                }
+                this.started = true;
+                return this._roundStack[pointer];
+            }
+        }, {
+            key: 'stackSize',
+            get: function get() {
+                return this._roundStack.length;
+            }
+        }]);
+
+        return LifeWorkerService;
+    }()) || _class);
+});
 define('resources/elements/controls',['exports', 'aurelia-framework', 'aurelia-event-aggregator'], function (exports, _aureliaFramework, _aureliaEventAggregator) {
     'use strict';
 
@@ -426,126 +546,6 @@ define('resources/elements/stats',['exports', 'aurelia-framework', 'aurelia-even
         return StatsCustomElement;
     }()) || _class);
 });
-define('resources/services/life-worker-service',['exports', 'aurelia-framework', 'aurelia-event-aggregator'], function (exports, _aureliaFramework, _aureliaEventAggregator) {
-    'use strict';
-
-    Object.defineProperty(exports, "__esModule", {
-        value: true
-    });
-    exports.LifeWorkerService = undefined;
-
-    function _classCallCheck(instance, Constructor) {
-        if (!(instance instanceof Constructor)) {
-            throw new TypeError("Cannot call a class as a function");
-        }
-    }
-
-    var _createClass = function () {
-        function defineProperties(target, props) {
-            for (var i = 0; i < props.length; i++) {
-                var descriptor = props[i];
-                descriptor.enumerable = descriptor.enumerable || false;
-                descriptor.configurable = true;
-                if ("value" in descriptor) descriptor.writable = true;
-                Object.defineProperty(target, descriptor.key, descriptor);
-            }
-        }
-
-        return function (Constructor, protoProps, staticProps) {
-            if (protoProps) defineProperties(Constructor.prototype, protoProps);
-            if (staticProps) defineProperties(Constructor, staticProps);
-            return Constructor;
-        };
-    }();
-
-    var _dec, _class;
-
-    var LifeWorkerService = exports.LifeWorkerService = (_dec = (0, _aureliaFramework.inject)(_aureliaEventAggregator.EventAggregator), _dec(_class = function () {
-        function LifeWorkerService(eventAggregator) {
-            _classCallCheck(this, LifeWorkerService);
-
-            this.ea = eventAggregator;
-
-            this.emptyStack = [[], [], [], [], [], [], [], [], [], []];
-            this._roundStack = this.emptyStack.slice();
-            this.fillSlotPointer = 0;
-            this.maxIndex = 9;
-            this.started = false;
-        }
-
-        LifeWorkerService.prototype.init = function init(w, h, rules, cellSize, cells) {
-            var _this = this;
-
-            if (this.wrkr) {
-                this.wrkr.terminate();
-            }
-            this.wrkr = new Worker('./assets/life-worker.js');
-            this.wrkr.onmessage = function (e) {
-                if (e.data && e.data.message == 'newGeneration') {
-                    _this._roundStack[_this.fillSlotPointer] = e.data.cells;
-                    _this.fillSlotPointer = (_this.fillSlotPointer + 1) % _this._roundStack.length;
-                }
-            };
-            this._roundStack = this.emptyStack.slice();
-            this.rules = rules;
-            this.cellSize = cellSize;
-            var workerData = {
-                message: 'start',
-                w: w,
-                h: h,
-                rules: rules,
-                generations: this._roundStack.length - 1,
-                cells: cells
-            };
-            this.getSlotPointer = 0;
-            this.wrkr.postMessage(workerData);
-        };
-
-        LifeWorkerService.prototype.changeRules = function changeRules(rules) {
-            var workerData = {
-                message: 'rules',
-                rules: rules
-            };
-            this.wrkr.postMessage(workerData);
-        };
-
-        LifeWorkerService.prototype.getBatch = function getBatch(cells) {
-            var workerData = {
-                message: 'resume',
-                rules: this.rules,
-                generations: 1,
-                cells: cells
-            };
-            this.wrkr.postMessage(workerData);
-        };
-
-        _createClass(LifeWorkerService, [{
-            key: 'cells',
-            get: function get() {
-                var _this2 = this;
-
-                var pointer = this.getSlotPointer;
-                this.getSlotPointer = (this.getSlotPointer + 1) % this._roundStack.length;
-                if (this.started) {
-                    var emptySlotPointer = pointer == 0 ? this.maxIndex : pointer - 1;
-
-                    setTimeout(function () {
-                        _this2.getBatch();
-                    });
-                }
-                this.started = true;
-                return this._roundStack[pointer];
-            }
-        }, {
-            key: 'stackSize',
-            get: function get() {
-                return this._roundStack.length;
-            }
-        }]);
-
-        return LifeWorkerService;
-    }()) || _class);
-});
 define('resources/elements/tabs',['exports', 'aurelia-framework', 'aurelia-event-aggregator'], function (exports, _aureliaFramework, _aureliaEventAggregator) {
     'use strict';
 
@@ -583,5 +583,5 @@ define('text!resources/elements/controls.html', ['module'], function(module) { m
 define('text!resources/elements/life.html', ['module'], function(module) { module.exports = "<template>\n    <canvas id=\"life\"\n            width=\"750\"\n            height=\"464\">\n    </canvas>\n</template>"; });
 define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <require from=\"resources/elements/controls\"></require>\n    <require from=\"resources/elements/tabs\"></require>\n    <h1>Fast Life | AureliaJS<a href=\"/\">ashWare</a></h1>\n    <life></life>\n    <controls></controls>\n    <tabs></tabs>\n</template>"; });
 define('text!resources/elements/stats.html', ['module'], function(module) { module.exports = "<template>\n    <p>generations: ${generations} | cells: ${cellCount} | ${speed} gen/s</p>\n</template>"; });
-define('text!resources/elements/tabs.html', ['module'], function(module) { module.exports = "<template>\n    <tab-buttons>\n        <tab-button click.delegate=\"activateTab(1)\"\n                    class=\"active\">Life Rules</tab-button>\n        <tab-button click.delegate=\"activateTab(2)\">Story</tab-button>\n    </tab-buttons>\n    <tab-contents>\n        <tab-content class=\"lifeRules\">\n            <row-labels>\n                <p title=\"Neighbour count to stay alive\">Stay</p>\n                <p title=\"Neighbour count to come alive\">New</p>\n            </row-labels>\n            <life-rules>\n                <life-rule repeat.for=\"rule of liferules\"\n                           if.bind=\"$index !== 9\">\n                    <input type=\"checkbox\"\n                           checked.bind=\"rule\"\n                           id.one-time=\"'rule_'+$index\"\n                           change.delegate=\"setRules($index)\">\n                    <label for.one-time=\"'rule_'+$index\">${$index % 10}</label>\n                </life-rule>\n            </life-rules>\n        </tab-content>\n    </tab-contents>\n</template>"; });
+define('text!resources/elements/tabs.html', ['module'], function(module) { module.exports = "<template>\n    <tab-buttons>\n        <tab-button click.delegate=\"activateTab(1)\"\n                    class=\"active\">Life Rules</tab-button>\n        <tab-button click.delegate=\"activateTab(2)\">Story</tab-button>\n    </tab-buttons>\n    <tab-contents>\n        <tab-content class=\"lifeRules\">\n            <row-labels>\n                <p title=\"Neighbour count to stay alive\">Stay</p>\n                <p title=\"Neighbour count to come alive\">New</p>\n            </row-labels>\n            <life-rules>\n                <life-rule repeat.for=\"rule of liferules\"\n                           if.bind=\"$index !== 9\">\n                    <input type=\"checkbox\"\n                           checked.bind=\"rule\"\n                           id.one-time=\"'rule_'+$index\"\n                           change.delegate=\"setRules($index)\">\n                    <label for.one-time=\"'rule_'+$index\">${$index % 10}</label>\n                </life-rule>\n            </life-rules>\n        </tab-content>\n        <tab-content class=\"lifeRules\">\n            <row-labels>\n                <p title=\"Preset life rules\">Presets</p>\n            </row-labels>\n            <life-rules>\n                <select change.delegate=\"setPreset()\"\n                        value.bind=\"selectedPreset\"> \n                            <option repeat.for=\"preset of presets\"  \n                                model.bind=\"$index\" \n                                innerhtml.bind=\"preset.name\"> \n                            </option> \n                        </select>\n            </life-rules>\n        </tab-content>\n    </tab-contents>\n</template>"; });
 //# sourceMappingURL=app-bundle.js.map

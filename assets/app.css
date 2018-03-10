@@ -313,8 +313,6 @@ tab-button + tab-button {
 }
 tab-contents {
   display: block;
-}
-tab-content {
   border: 2px solid #8a8a00;
   border-radius: 0 3px 3px 3px;
   padding: 20px 10px 10px;
@@ -336,6 +334,7 @@ row-labels p {
 }
 .lifeRules row-labels {
   margin-right: 20px;
+  min-width: 60px;
 }
 .lifeRules row-labels p {
   line-height: 20px;

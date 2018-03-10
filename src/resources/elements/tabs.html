@@ -21,5 +21,19 @@
                 </life-rule>
             </life-rules>
         </tab-content>
+        <tab-content class="lifeRules">
+            <row-labels>
+                <p title="Preset life rules">Presets</p>
+            </row-labels>
+            <life-rules>
+                <select change.delegate="setPreset()"
+                        value.bind="selectedPreset"> 
+                            <option repeat.for="preset of presets"  
+                                model.bind="$index" 
+                                innerhtml.bind="preset.name"> 
+                            </option> 
+                        </select>
+            </life-rules>
+        </tab-content>
     </tab-contents>
 </template>

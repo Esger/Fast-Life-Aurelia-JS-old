@@ -567,13 +567,30 @@ define('resources/elements/tabs',['exports', 'aurelia-framework', 'aurelia-event
             _classCallCheck(this, TabsCustomElement);
 
             this.ea = eventAggregator;
-            this.liferules = [false, false, false, true, false, false, false, false, false, false, false, false, true, true, false, false, false, false, false];
+            this.liferules = [];
+            this.selectedPreset = 5;
+            this.presets = [{ rule: "125/36", name: "2&times;2" }, { rule: "34/34", name: "34 Life" }, { rule: "1358/357", name: "Amoeba" }, { rule: "4567/345", name: "Assimilation" }, { rule: "235678/378", name: "Coagulations" }, { rule: "23/3", name: "Conway&rsquo;s Life" }, { rule: "45678/3", name: "Coral" }, { rule: "34678/3678", name: "Day &amp; Night" }, { rule: "5678/35678", name: "Diamoeba" }, { rule: "012345678/3", name: "Flakes" }, { rule: "1/1", name: "Gnarl" }, { rule: "23/36", name: "High Life" }, { rule: "5/345", name: "Long Life" }, { rule: "12345/3", name: "Maze" }, { rule: "1234/3", name: "Mazectric" }, { rule: "245/368", name: "Move" }, { rule: "238/357", name: "Pseudo Life" }, { rule: "1357/1357", name: "Replicator" }, { rule: "/2", name: "Seeds" }, { rule: "/234", name: "Serviettes" }, { rule: "235678/3678", name: "Stains" }, { rule: "2345/45678", name: "Walled Cities" }];
+            this.setPreset();
         }
+
+        TabsCustomElement.prototype.setPreset = function setPreset() {
+            var rules = this.presets[this.selectedPreset].rule.split('/');
+            var stayRules = rules[0];
+            var newRules = rules[1];
+            var i = 0;
+            for (var _i = 0; _i < 10; _i++) {
+                this.liferules[_i] = stayRules.includes(_i);
+                this.liferules[_i + 10] = newRules.includes(_i);
+            }
+            this.liferules = this.liferules.slice(0, 19);
+            this.ea.publish('lifeRules', this.liferules);
+        };
 
         TabsCustomElement.prototype.setRules = function setRules(i) {
             this.liferules[i] = !this.liferules[i];
-            this.ea.publish('lifeRules', this.liferules);
         };
+
+        TabsCustomElement.prototype.attached = function attached() {};
 
         return TabsCustomElement;
     }()) || _class);

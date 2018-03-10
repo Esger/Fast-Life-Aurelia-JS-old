@@ -123,13 +123,14 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             this.started = false;
         }
 
-        LifeWorkerService.prototype.init = function init(w, h, rules, cellSize, cells) {
+        LifeWorkerService.prototype.init = function init(w, h, liferules) {
             var _this = this;
 
             if (this.wrkr) {
                 this.wrkr.terminate();
             }
             this.wrkr = new Worker('./assets/life-worker.js');
+            this.fillSlotPointer = 0;
             this.wrkr.onmessage = function (e) {
                 if (e.data && e.data.message == 'newGeneration') {
                     _this._roundStack[_this.fillSlotPointer] = e.data.cells;
@@ -137,18 +138,17 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
                 }
             };
             this._roundStack = this.emptyStack.slice();
-            this.rules = rules;
-            this.cellSize = cellSize;
             var workerData = {
-                message: 'start',
+                message: 'initialize',
                 w: w,
                 h: h,
-                rules: rules,
-                generations: this._roundStack.length - 1,
-                cells: cells
+                liferules: liferules
             };
-            this.getSlotPointer = 0;
             this.wrkr.postMessage(workerData);
+            this.getSlotPointer = 0;
+            this._roundStack.forEach(function (slot) {
+                _this.wrkr.postMessage({ message: 'resume' });
+            });
         };
 
         LifeWorkerService.prototype.changeRules = function changeRules(rules) {
@@ -161,10 +161,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
 
         LifeWorkerService.prototype.getBatch = function getBatch(cells) {
             var workerData = {
-                message: 'resume',
-                rules: this.rules,
-                generations: 1,
-                cells: cells
+                message: 'resume'
             };
             this.wrkr.postMessage(workerData);
         };
@@ -178,7 +175,6 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
                 this.getSlotPointer = (this.getSlotPointer + 1) % this._roundStack.length;
                 if (this.started) {
                     var emptySlotPointer = pointer == 0 ? this.maxIndex : pointer - 1;
-
                     setTimeout(function () {
                         _this2.getBatch();
                     });
@@ -320,6 +316,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.lfWs = lifeWorkerService;
             this.cellSize = 2;
             this.cellsAlive = 0;
+            this.liferules = [];
             this.trails = true;
             this.speedHandle = null;
             this.running = false;
@@ -347,7 +344,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         LifeCustomElement.prototype.animateStep = function animateStep() {
             var _this = this;
 
-            this.drawFromStack();
+            this.drawCells();
             if (this.running && !this.stable) {
                 setTimeout(function () {
                     _this.animateStep();
@@ -357,7 +354,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             }
         };
 
-        LifeCustomElement.prototype.drawFromStack = function drawFromStack() {
+        LifeCustomElement.prototype.drawCells = function drawCells() {
             var cells = this.lfWs.cells;
             var cellSize = this.cellSize;
             var offScreen = this.ctxOffscreen;
@@ -371,6 +368,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
                     var cell = cells[i];i -= 1;
                     offScreen.fillRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize);
                 }
+
                 this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
                 this.cellsAlive = cells.length;
                 this.lifeSteps += 1;
@@ -392,15 +390,13 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.offScreenCanvas.width = this.canvasWidth;
             this.offScreenCanvas.height = this.canvasHeight;
             this.ctxOffscreen = this.offScreenCanvas.getContext('2d');
-
-            this.liferules = [false, false, false, true, false, false, false, false, false, false, false, false, true, true, false, false, false, false, false];
             this.lifeSteps = 0;
-            this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, this.cellSize);
+            this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
             if (this.speedHandle) {
                 clearInterval(this.speedHandle);
             }
             this.speedHandle = setInterval(function () {
-                _this2.showStats();
+                return _this2.showStats;
             }, 500);
         };
 
@@ -412,8 +408,9 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
 
         LifeCustomElement.prototype.stop = function stop() {
             this.running = false;
-            clearInterval(this.speedHandle);
-            setTimeout(this.showStats, 500);
+            if (this.speedHandle) {
+                clearInterval(this.speedHandle);
+            }
         };
 
         LifeCustomElement.prototype.start = function start() {
@@ -434,26 +431,27 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
                 _this3.start();
             });
             this.ea.subscribe('step', function () {
-                _this3.drawFromStack();
+                _this3.drawCells();
             });
             this.ea.subscribe('toggleTrails', function () {
                 _this3.trails = !_this3.trails;
                 _this3.opacity = 1 - _this3.trails * 0.9;
             });
             this.ea.subscribe('cellSize', function (response) {
-                _this3.cellSize = response;
                 _this3.stop();
+                _this3.cellSize = response;
                 _this3.initLife();
-                _this3.start();
+                _this3.drawCells();
             });
             this.ea.subscribe('lifeRules', function (response) {
-                _this3.liferules = response;
-                _this3.lfWs.changeRules(_this3.liferules);
+                _this3.liferules = response.liferules;
+                if (response.init) {
+                    _this3.initLife();
+                }
             });
         };
 
         LifeCustomElement.prototype.attached = function attached() {
-            this.initLife();
             this.addListeners();
         };
 
@@ -578,19 +576,28 @@ define('resources/elements/tabs',['exports', 'aurelia-framework', 'aurelia-event
             var stayRules = rules[0];
             var newRules = rules[1];
             var i = 0;
-            for (var _i = 0; _i < 10; _i++) {
-                this.liferules[_i] = stayRules.includes(_i);
-                this.liferules[_i + 10] = newRules.includes(_i);
+            for (var _i = 0; _i < 9; _i++) {
+                this.liferules[_i] = newRules.includes(_i);
+                this.liferules[_i + 10] = stayRules.includes(_i);
             }
-            this.liferules = this.liferules.slice(0, 19);
-            this.ea.publish('lifeRules', this.liferules);
+            this.publishRules(false);
+        };
+
+        TabsCustomElement.prototype.publishRules = function publishRules(init) {
+            this.ea.publish('lifeRules', {
+                liferules: this.liferules,
+                init: init
+            });
         };
 
         TabsCustomElement.prototype.setRules = function setRules(i) {
             this.liferules[i] = !this.liferules[i];
+            this.publishRules(false);
         };
 
-        TabsCustomElement.prototype.attached = function attached() {};
+        TabsCustomElement.prototype.attached = function attached() {
+            this.publishRules(true);
+        };
 
         return TabsCustomElement;
     }()) || _class);
@@ -600,5 +607,5 @@ define('text!resources/elements/controls.html', ['module'], function(module) { m
 define('text!resources/elements/life.html', ['module'], function(module) { module.exports = "<template>\n    <canvas id=\"life\"\n            width=\"750\"\n            height=\"464\">\n    </canvas>\n</template>"; });
 define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <require from=\"resources/elements/controls\"></require>\n    <require from=\"resources/elements/tabs\"></require>\n    <h1>Fast Life | AureliaJS<a href=\"/\">ashWare</a></h1>\n    <life></life>\n    <controls></controls>\n    <tabs></tabs>\n</template>"; });
 define('text!resources/elements/stats.html', ['module'], function(module) { module.exports = "<template>\n    <p>generations: ${generations} | cells: ${cellCount} | ${speed} gen/s</p>\n</template>"; });
-define('text!resources/elements/tabs.html', ['module'], function(module) { module.exports = "<template>\n    <tab-buttons>\n        <tab-button click.delegate=\"activateTab(1)\"\n                    class=\"active\">Life Rules</tab-button>\n        <tab-button click.delegate=\"activateTab(2)\">Story</tab-button>\n    </tab-buttons>\n    <tab-contents>\n        <tab-content class=\"lifeRules\">\n            <row-labels>\n                <p title=\"Neighbour count to stay alive\">Stay</p>\n                <p title=\"Neighbour count to come alive\">New</p>\n            </row-labels>\n            <life-rules>\n                <life-rule repeat.for=\"rule of liferules\"\n                           if.bind=\"$index !== 9\">\n                    <input type=\"checkbox\"\n                           checked.bind=\"rule\"\n                           id.one-time=\"'rule_'+$index\"\n                           change.delegate=\"setRules($index)\">\n                    <label for.one-time=\"'rule_'+$index\">${$index % 10}</label>\n                </life-rule>\n            </life-rules>\n        </tab-content>\n        <tab-content class=\"lifeRules\">\n            <row-labels>\n                <p title=\"Preset life rules\">Presets</p>\n            </row-labels>\n            <life-rules>\n                <select change.delegate=\"setPreset()\"\n                        value.bind=\"selectedPreset\"> \n                            <option repeat.for=\"preset of presets\"  \n                                model.bind=\"$index\" \n                                innerhtml.bind=\"preset.name\"> \n                            </option> \n                        </select>\n            </life-rules>\n        </tab-content>\n    </tab-contents>\n</template>"; });
+define('text!resources/elements/tabs.html', ['module'], function(module) { module.exports = "<template>\n    <tab-buttons>\n        <tab-button click.delegate=\"activateTab(1)\"\n                    class=\"active\">Life Rules</tab-button>\n        <tab-button click.delegate=\"activateTab(2)\">Story</tab-button>\n    </tab-buttons>\n    <tab-contents>\n        <tab-content class=\"lifeRules\">\n            <row-labels>\n                <p title=\"Neighbour count to stay alive\">New</p>\n                <p title=\"Neighbour count to come alive\">Stay</p>\n            </row-labels>\n            <life-rules>\n                <life-rule repeat.for=\"rule of liferules\"\n                           if.bind=\"$index !== 9\">\n                    <input type=\"checkbox\"\n                           checked.bind=\"rule\"\n                           id.one-time=\"'rule_'+$index\"\n                           change.delegate=\"setRules($index)\">\n                    <label for.one-time=\"'rule_'+$index\">${$index % 10}</label>\n                </life-rule>\n            </life-rules>\n        </tab-content>\n        <tab-content class=\"lifeRules\">\n            <row-labels>\n                <p title=\"Preset life rules\">Presets</p>\n            </row-labels>\n            <life-rules>\n                <select change.delegate=\"setPreset()\"\n                        value.bind=\"selectedPreset\"> \n                            <option repeat.for=\"preset of presets\"  \n                                model.bind=\"$index\" \n                                innerhtml.bind=\"preset.name\"> \n                            </option> \n                        </select>\n            </life-rules>\n        </tab-content>\n    </tab-contents>\n</template>"; });
 //# sourceMappingURL=app-bundle.js.map

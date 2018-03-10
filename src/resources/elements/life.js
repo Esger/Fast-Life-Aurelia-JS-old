@@ -15,6 +15,7 @@ export class LifeCustomElement {
         this.lfWs = lifeWorkerService;
         this.cellSize = 2;
         this.cellsAlive = 0;
+        this.liferules = [];
         this.trails = true;
         this.speedHandle = null;
         this.running = false;
@@ -56,7 +57,7 @@ export class LifeCustomElement {
     }
 
     animateStep() {
-        this.drawFromStack();
+        this.drawCells();
         if (this.running && !this.stable) {
             setTimeout(() => { this.animateStep(); });
         } else {
@@ -64,7 +65,7 @@ export class LifeCustomElement {
         }
     }
 
-    drawFromStack() {
+    drawCells() {
         let cells = this.lfWs.cells;
         const cellSize = this.cellSize;
         const offScreen = this.ctxOffscreen;
@@ -78,6 +79,7 @@ export class LifeCustomElement {
                 let cell = cells[i]; i -= 1;
                 offScreen.fillRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize);
             }
+
             this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
             this.cellsAlive = cells.length;
             this.lifeSteps += 1;
@@ -97,17 +99,12 @@ export class LifeCustomElement {
         this.offScreenCanvas.width = this.canvasWidth;
         this.offScreenCanvas.height = this.canvasHeight;
         this.ctxOffscreen = this.offScreenCanvas.getContext('2d');
-
-        this.liferules = [
-            false, false, false, true, false, false, false, false, false, false,
-            false, false, true, true, false, false, false, false, false
-        ];
         this.lifeSteps = 0; // Number of iterations / steps done
-        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, this.cellSize);
+        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
         if (this.speedHandle) {
             clearInterval(this.speedHandle);
         }
-        this.speedHandle = setInterval(() => { this.showStats(); }, 500);
+        this.speedHandle = setInterval(() => this.showStats, 500);
     }
 
     clear() {
@@ -118,8 +115,9 @@ export class LifeCustomElement {
 
     stop() {
         this.running = false;
-        clearInterval(this.speedHandle);
-        setTimeout(this.showStats, 500);
+        if (this.speedHandle) {
+            clearInterval(this.speedHandle);
+        }
     }
 
     start() {
@@ -138,26 +136,27 @@ export class LifeCustomElement {
             this.start();
         });
         this.ea.subscribe('step', () => {
-            this.drawFromStack();
+            this.drawCells();
         });
         this.ea.subscribe('toggleTrails', () => {
             this.trails = !this.trails;
             this.opacity = 1 - this.trails * 0.9;
         });
         this.ea.subscribe('cellSize', response => {
-            this.cellSize = response;
             this.stop();
+            this.cellSize = response;
             this.initLife();
-            this.start();
+            this.drawCells();
         });
         this.ea.subscribe('lifeRules', response => {
-            this.liferules = response;
-            this.lfWs.changeRules(this.liferules);
+            this.liferules = response.liferules;
+            if (response.init) {
+                this.initLife();
+            }
         });
     }
 
     attached() {
-        this.initLife();
         this.addListeners();
     }
 

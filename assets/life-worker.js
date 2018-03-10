@@ -2,22 +2,12 @@ var conway = {
     gogogo: null,
     cellsAlive: 0, // Number of cells alive
     fillRatio: 0.2, // Percentage of available cells that will be set alive initially (20)
-    // newLifeCells: [],
     liferules: [],
-    // liferules : [
-    //     false, false, false, true, false, false, false, false, false,
-    //     false, false, true, true, false, false, false, false, false
-    // ],
-    birthIndicator: 3,
-    deathIndicators: [9, 10, 13, 14, 15, 16, 17],
     numberCells: 0, // Number of available cells
     spaceHeight: 0,
     spaceWidth: 0,
-    speed: 0,
     startnumberLivecells: 0,
     lifeSteps: 0, // Number of iterations / steps done
-    prevSteps: 0,
-    walkers: [],
 
     fillZero: function () {
         const cellCount = conway.spaceWidth * conway.spaceHeight;
@@ -29,40 +19,24 @@ var conway = {
         return flatCells;
     },
 
-    ignite: function (w, h, rules, generations, cells) {
+    ignite: function (w, h, liferules) {
         conway.spaceWidth = w;
         conway.spaceHeight = h;
-        conway.liferules = rules;
-        conway.generations = generations;
+        conway.liferules = liferules;
         conway.numberCells = conway.spaceWidth * conway.spaceHeight;
         conway.startnumberLivecells = conway.numberCells * conway.fillRatio;
         conway.cellsAlive = conway.startnumberLivecells;
-        // conway.newLifeCells = [];
         conway.neighbours = conway.fillZero();
-        conway.liveCells = cells || conway.fillRandom();
+        conway.liveCells = conway.fillRandom();
         conway.sendScreen();
     },
 
-    resume: function (rules, generations, cells) {
-        conway.generations = generations || 10;
-        conway.lifeSteps = 0;
-        conway.rules = rules || [];
-        conway.cells = cells || [];
-    },
-
-    stop: function () {
-        clearInterval(conway.gogogo);
-        conway.sendStopAck();
-    },
-
     // Put new pair of values in array
-    celXY: function (x, y, a) {
-        let cell = {
+    celXY: function (x, y) {
+        return {
             x: x,
-            y: y,
-            alive: a
+            y: y
         };
-        return cell;
     },
 
     // Fill liveCells with random cellxy's
@@ -73,7 +47,7 @@ var conway = {
             let x = 0;
             for (; x < conway.spaceWidth; x += 1) {
                 if (Math.random() < conway.fillRatio) {
-                    cells.push(conway.celXY(x, y, true));
+                    cells.push(conway.celXY(x, y));
                 }
             }
         }
@@ -82,8 +56,8 @@ var conway = {
 
     // Set all neighbours to zero
     zeroNeighbours: function () {
-
         const count = conway.numberCells;
+
         let i = 0;
         for (; i < count; i += 1) {
             conway.neighbours[i] = 0;
@@ -92,7 +66,6 @@ var conway = {
 
     // Tell neighbours around livecells they have a neighbour
     updateNeighbours: function () {
-
         const count = conway.liveCells.length;
         const maxNeighbour = 2;
         const rowLength = conway.spaceWidth;
@@ -139,38 +112,14 @@ var conway = {
         postMessage(workerData);
     },
 
-    sendReady: function () {
-        let workerData = {
-            message: 'ready',
-        };
-        postMessage(workerData);
-    },
-
-    sendStopAck: function () {
-        let workerData = {
-            message: 'stopAck',
-        };
-        postMessage(workerData);
-    },
-
     // Animation function
     bugLifeStep: function () {
-        if (conway.lifeSteps < conway.generations) {
-            conway.zeroNeighbours();
-            conway.updateNeighbours();
-            conway.evalNeighbours();
-            conway.sendScreen();
-        } else {
-            clearInterval(conway.gogogo);
-            // conway.sendReady();
-        }
+        conway.zeroNeighbours();
+        conway.updateNeighbours();
+        conway.evalNeighbours();
+        conway.sendScreen();
         conway.lifeSteps += 1;
-        // conway.addNewLifeCells();
-    },
-
-    burst: function () {
-        conway.gogogo = setInterval(conway.bugLifeStep);
-    },
+    }
 
 };
 
@@ -179,19 +128,14 @@ onmessage = function (e) {
         let message = e.data.message;
         let data = e.data;
         switch (message) {
-            case 'start':
-                conway.ignite(data.w, data.h, data.rules, data.generations, data.cells);
-                conway.burst();
+            case 'initialize':
+                conway.ignite(data.w, data.h, data.liferules);
                 break;
-            case 'stop':
-                conway.stop();
+            case 'resume':
+                conway.bugLifeStep();
                 break;
             case 'rules':
                 conway.liferules = data.rules;
-                break;
-            case 'resume':
-                conway.resume(data.rules, data.generations, data.cells);
-                conway.burst();
                 break;
             default:
         }

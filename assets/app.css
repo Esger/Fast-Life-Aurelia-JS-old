@@ -325,6 +325,9 @@ life-rules [type=checkbox] + label {
   min-width: 30px;
   padding: 0 10px;
 }
+row-labels p {
+  text-align: right;
+}
 life-rule,
 row-labels p {
   margin-bottom: 10px;

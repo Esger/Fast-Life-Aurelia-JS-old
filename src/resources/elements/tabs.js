@@ -46,21 +46,27 @@ export class TabsCustomElement {
         let stayRules = rules[0];
         let newRules = rules[1];
         let i = 0;
-        for (let i = 0; i < 10; i++) {
-            this.liferules[i] = stayRules.includes(i);
-            this.liferules[i + 10] = newRules.includes(i);
+        for (let i = 0; i < 9; i++) {
+            this.liferules[i] = newRules.includes(i);
+            this.liferules[i + 10] = stayRules.includes(i);
         }
-        this.liferules = this.liferules.slice(0, 19);
-        this.ea.publish('lifeRules', this.liferules);
+        this.publishRules(false);
+    }
+
+    publishRules(init) {
+        this.ea.publish('lifeRules', {
+            liferules: this.liferules,
+            init: init
+        });
     }
 
     setRules(i) {
         this.liferules[i] = !this.liferules[i];
-        // this.ea.publish('lifeRules', this.liferules);
+        this.publishRules(false);
     }
 
     attached() {
-        // this.ea.publish('lifeRules', this.liferules);
+        this.publishRules(true);
     }
 
 }

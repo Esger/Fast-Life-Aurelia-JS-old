@@ -25,7 +25,6 @@ export class LifeWorkerService {
         this.getSlotPointer = (this.getSlotPointer + 1) % this._roundStack.length;
         if (this.started) {
             let emptySlotPointer = (pointer == 0) ? this.maxIndex : pointer - 1;
-            // this._roundStack[emptySlotPointer] = [];
             setTimeout(() => { this.getBatch(); });
         }
         this.started = true;
@@ -36,11 +35,12 @@ export class LifeWorkerService {
         return this._roundStack.length;
     }
 
-    init(w, h, rules, cellSize, cells) {
+    init(w, h, liferules) {
         if (this.wrkr) {
             this.wrkr.terminate();
         }
         this.wrkr = new Worker('./assets/life-worker.js');
+        this.fillSlotPointer = 0;
         this.wrkr.onmessage = (e) => {
             if (e.data && e.data.message == 'newGeneration') {
                 this._roundStack[this.fillSlotPointer] = e.data.cells;
@@ -48,18 +48,27 @@ export class LifeWorkerService {
             }
         };
         this._roundStack = this.emptyStack.slice();
-        this.rules = rules;
-        this.cellSize = cellSize;
         let workerData = {
-            message: 'start',
+            message: 'initialize',
             w: w,
             h: h,
-            rules: rules,
-            generations: this._roundStack.length - 1,
-            cells: cells
+            liferules: liferules
         };
-        this.getSlotPointer = 0;
         this.wrkr.postMessage(workerData);
+        this.getSlotPointer = 0;
+        this._roundStack.forEach(slot => {
+            this.wrkr.postMessage({ message: 'resume' });
+        });
+        // let emptySlot = (slot) => {
+        //     return slot.length == 0;
+        // };
+        // let fillSlot = () => {
+        //     if (this._roundStack.some(emptySlot)) {
+        //         this.wrkr.postMessage({ message: 'resume' });
+        //         setTimeout(fillSlot, 50);
+        //     }
+        // };
+        // fillSlot();
     }
 
     changeRules(rules) {
@@ -72,10 +81,7 @@ export class LifeWorkerService {
 
     getBatch(cells) {
         let workerData = {
-            message: 'resume',
-            rules: this.rules,
-            generations: 1,
-            cells: cells
+            message: 'resume'
         };
         this.wrkr.postMessage(workerData);
     }

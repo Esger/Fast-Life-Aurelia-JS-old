@@ -587,8 +587,25 @@ define('resources/elements/tabs',['exports', 'aurelia-framework', 'aurelia-event
             });
         };
 
+        TabsCustomElement.prototype.compareToPresets = function compareToPresets() {
+            var newRules = this.liferules.slice(0, 9);
+            var stayRules = this.liferules.slice(10, 19);
+            var trueIndexesString = function trueIndexesString(rule, index) {
+                return rule ? index : '';
+            };
+            var stayRulesString = stayRules.map(trueIndexesString).join('');
+            var newRulesString = newRules.map(trueIndexesString).join('');
+            var rulesString = stayRulesString + '/' + newRulesString;
+            var findRulesString = function findRulesString(preset) {
+                return preset.rule == rulesString;
+            };
+            var index = this.presets.findIndex(findRulesString);
+            this.selectedPreset = index > -1 ? index : this.selectedPreset;
+        };
+
         TabsCustomElement.prototype.setRules = function setRules(i) {
             this.liferules[i] = !this.liferules[i];
+            this.compareToPresets();
             this.publishRules(false);
         };
 

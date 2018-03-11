@@ -79,8 +79,23 @@ export class TabsCustomElement {
         });
     }
 
+    compareToPresets() {
+        let newRules = this.liferules.slice(0, 9);
+        let stayRules = this.liferules.slice(10, 19);
+        let trueIndexesString = (rule, index) => {
+            return rule ? index : '';
+        };
+        let stayRulesString = stayRules.map(trueIndexesString).join('');
+        let newRulesString = newRules.map(trueIndexesString).join('');
+        let rulesString = stayRulesString + '/' + newRulesString;
+        let findRulesString = preset => { return preset.rule == rulesString; };
+        let index = this.presets.findIndex(findRulesString);
+        this.selectedPreset = (index > -1) ? index : this.selectedPreset;
+    }
+
     setRules(i) {
         this.liferules[i] = !this.liferules[i];
+        this.compareToPresets();
         this.publishRules(false);
     }
 

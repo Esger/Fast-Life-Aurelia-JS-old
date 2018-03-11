@@ -567,14 +567,16 @@ define('resources/elements/tabs',['exports', 'aurelia-framework', 'aurelia-event
         };
 
         TabsCustomElement.prototype.setPreset = function setPreset() {
-            var rules = this.presets[this.selectedPreset].rule.split('/');
-            var stayRules = rules[0];
-            var newRules = rules[1];
+            var rulesSet = this.presets[this.selectedPreset].rule.split('/');
+            var stayRulesString = rulesSet[0];
+            var newRulesString = rulesSet[1];
+            var newRules = [];
             var i = 0;
             for (var _i = 0; _i < 9; _i++) {
-                this.liferules[_i] = newRules.includes(_i);
-                this.liferules[_i + 10] = stayRules.includes(_i);
+                newRules[_i] = newRulesString.includes(_i);
+                newRules[_i + 10] = stayRulesString.includes(_i);
             }
+            this.liferules = newRules;
             this.publishRules(false);
         };
 

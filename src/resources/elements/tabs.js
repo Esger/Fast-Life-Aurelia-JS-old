@@ -59,14 +59,16 @@ export class TabsCustomElement {
     }
 
     setPreset() {
-        let rules = this.presets[this.selectedPreset].rule.split('/');
-        let stayRules = rules[0];
-        let newRules = rules[1];
+        let rulesSet = this.presets[this.selectedPreset].rule.split('/');
+        let stayRulesString = rulesSet[0];
+        let newRulesString = rulesSet[1];
+        let newRules = [];
         let i = 0;
         for (let i = 0; i < 9; i++) {
-            this.liferules[i] = newRules.includes(i);
-            this.liferules[i + 10] = stayRules.includes(i);
+            newRules[i] = newRulesString.includes(i);
+            newRules[i + 10] = stayRulesString.includes(i);
         }
+        this.liferules = newRules;
         this.publishRules(false);
     }
 

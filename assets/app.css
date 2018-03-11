@@ -299,30 +299,6 @@ input + output {
 [type=range] + output {
   margin: 0 15px 0 10px;
 }
-tabs {
-  display: block;
-}
-tab-buttons {
-  display: flex;
-  margin-bottom: -2px;
-}
-tab-button {
-  padding: 2px 10px 0;
-  border: 2px solid #8a8a00;
-  border-radius: 3px;
-}
-tab-button.active {
-  border-bottom-color: #dd0;
-}
-tab-button + tab-button {
-  margin-left: 5px;
-}
-tab-contents {
-  display: block;
-  border: 2px solid #8a8a00;
-  border-radius: 0 3px 3px 3px;
-  padding: 20px 10px 10px;
-}
 life-rules {
   display: flex;
   flex-wrap: wrap;
@@ -350,4 +326,28 @@ row-labels p {
   font-size: 14px;
   letter-spacing: 1px;
   text-transform: uppercase;
+}
+tabs {
+  display: block;
+}
+tab-buttons {
+  display: flex;
+  margin-bottom: -2px;
+}
+tab-button {
+  padding: 2px 10px 0;
+  border: 2px solid #8a8a00;
+  border-radius: 3px;
+}
+tab-button.active {
+  border-bottom-color: #dd0;
+}
+tab-button + tab-button {
+  margin-left: 5px;
+}
+tab-contents {
+  display: block;
+  border: 2px solid #8a8a00;
+  border-radius: 0 3px 3px 3px;
+  padding: 20px 10px 10px;
 }

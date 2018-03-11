@@ -30,7 +30,7 @@
                         value.bind="selectedPreset"> 
                             <option repeat.for="preset of presets"  
                                 model.bind="$index" 
-                                innerhtml.bind="preset.name"> 
+                                innerhtml.one-time="preset.name"> 
                             </option> 
                         </select>
             </life-rules>

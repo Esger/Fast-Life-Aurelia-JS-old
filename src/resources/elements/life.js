@@ -152,6 +152,8 @@ export class LifeCustomElement {
             this.liferules = response.liferules;
             if (response.init) {
                 this.initLife();
+            } else {
+                this.lfWs.changeRules(this.liferules);
             }
         });
     }

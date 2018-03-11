@@ -38,7 +38,24 @@ export class TabsCustomElement {
             { rule: "235678/3678", name: "Stains" },
             { rule: "2345/45678", name: "Walled Cities" },
         ];
+        this.trails = true;
+        this.pulsor = true;
+        this.cellSizeExp = 1;
+        this.minCellSize = 0;
+        this.maxCellSize = 5;
         this.setPreset();
+    }
+
+    get cellSize() {
+        return Math.pow(2, this.cellSizeExp);
+    }
+
+    toggleTrails() {
+        this.ea.publish('toggleTrails', this.trails);
+    }
+
+    setCellSize() {
+        this.ea.publish('cellSize', this.cellSize);
     }
 
     setPreset() {
@@ -68,5 +85,4 @@ export class TabsCustomElement {
     attached() {
         this.publishRules(true);
     }
-
 }

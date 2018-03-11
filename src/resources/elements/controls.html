@@ -18,21 +18,6 @@
            class.bind="pulsor ? 'pulsor' : ''"
            title="Start"
            click.delegate="start()"></a>
-        <input id="trails"
-               type="checkbox"
-               checked.bind="trails"
-               change.delegate="toggleTrails()" />
-        <label class="trails"
-               for="trails"> Trails</label>
-        <input class="cellSize"
-               type="range"
-               title="cell size ${cellSize}"
-               min.one-time="minCellSize"
-               max.one-time="maxCellSize"
-               value.bind="cellSizeExp"
-               change.delegate="setCellSize()"
-               focus.delegate="stop()">
-        <output value.bind="cellSize"></output>
     </life-controls>
     <stats></stats>
 </template>

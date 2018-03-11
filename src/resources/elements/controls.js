@@ -10,22 +10,35 @@ export class ControlsCustomElement {
 
     constructor(eventAggregator) {
         this.ea = eventAggregator;
-        this.pulsor = true;
+        this.startPulsor = true;
+        this.clearPulsor = false;
+        this.addListeners();
     }
 
     clear() {
         this.ea.publish('clear');
+        this.clearPulsor = false;
+        this.startPulsor = true;
     }
+
     stop() {
         this.ea.publish('stop');
     }
+
     step() {
         this.ea.publish('step');
-        this.pulsor = false;
+        this.startPulsor = false;
     }
+
     start() {
         this.ea.publish('start');
-        this.pulsor = false;
+        this.startPulsor = false;
+    }
+
+    addListeners() {
+        this.ea.subscribe('cellSize', response => {
+            this.clearPulsor = true;
+        });
     }
 
 }

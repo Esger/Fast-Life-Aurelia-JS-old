@@ -3,6 +3,7 @@
     <life-controls>
         <a href="#"
            class="clearbutton"
+           class.bind="clearPulsor ? 'pulsor' : ''"
            title="Clear"
            click.delegate="clear()"></a>
         <a href="#"
@@ -15,7 +16,7 @@
            click.delegate="step()"></a>
         <a href="#"
            class="startbutton"
-           class.bind="pulsor ? 'pulsor' : ''"
+           class.bind="startPulsor ? 'pulsor' : ''"
            title="Start"
            click.delegate="start()"></a>
     </life-controls>

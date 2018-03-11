@@ -12,8 +12,9 @@ export class SettingsCustomElement {
     constructor(eventAggregator) {
         this.ea = eventAggregator;
         this.liferules = [];
-        this.selectedPreset = 5;
+        this.selectedPreset = 6;
         this.presets = [
+            { rule: undefined, name: '' },
             { rule: "125/36", name: "2&times;2" },
             { rule: "34/34", name: "34 Life" },
             { rule: "1358/357", name: "Amoeba" },
@@ -58,17 +59,19 @@ export class SettingsCustomElement {
     }
 
     setPreset() {
-        let rulesSet = this.presets[this.selectedPreset].rule.split('/');
-        let stayRulesString = rulesSet[0];
-        let newRulesString = rulesSet[1];
-        let newRules = [];
-        let i = 0;
-        for (let i = 0; i < 9; i++) {
-            newRules[i] = newRulesString.includes(i);
-            newRules[i + 10] = stayRulesString.includes(i);
+        if (this.selectedPreset > 0) {
+            let rulesSet = this.presets[this.selectedPreset].rule.split('/');
+            let stayRulesString = rulesSet[0];
+            let newRulesString = rulesSet[1];
+            let newRules = [];
+            let i = 0;
+            for (let i = 0; i < 9; i++) {
+                newRules[i] = newRulesString.includes(i);
+                newRules[i + 10] = stayRulesString.includes(i);
+            }
+            this.liferules = newRules;
+            this.publishRules(false);
         }
-        this.liferules = newRules;
-        this.publishRules(false);
     }
 
     publishRules(init) {
@@ -89,7 +92,7 @@ export class SettingsCustomElement {
         let rulesString = stayRulesString + '/' + newRulesString;
         let findRulesString = preset => { return preset.rule == rulesString; };
         let index = this.presets.findIndex(findRulesString);
-        this.selectedPreset = (index > -1) ? index : this.selectedPreset;
+        this.selectedPreset = (index > -1) ? index : undefined;
     }
 
     setRules(i) {

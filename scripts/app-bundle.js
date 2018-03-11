@@ -396,7 +396,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
                 clearInterval(this.speedHandle);
             }
             this.speedHandle = setInterval(function () {
-                return _this2.showStats;
+                _this2.showStats();
             }, 500);
         };
 

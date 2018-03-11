@@ -104,7 +104,7 @@ export class LifeCustomElement {
         if (this.speedHandle) {
             clearInterval(this.speedHandle);
         }
-        this.speedHandle = setInterval(() => this.showStats, 500);
+        this.speedHandle = setInterval(() => { this.showStats(); }, 500);
     }
 
     clear() {

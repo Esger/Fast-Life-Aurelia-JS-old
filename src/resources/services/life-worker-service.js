@@ -59,16 +59,6 @@ export class LifeWorkerService {
         this._roundStack.forEach(slot => {
             this.wrkr.postMessage({ message: 'resume' });
         });
-        // let emptySlot = (slot) => {
-        //     return slot.length == 0;
-        // };
-        // let fillSlot = () => {
-        //     if (this._roundStack.some(emptySlot)) {
-        //         this.wrkr.postMessage({ message: 'resume' });
-        //         setTimeout(fillSlot, 50);
-        //     }
-        // };
-        // fillSlot();
     }
 
     changeRules(rules) {

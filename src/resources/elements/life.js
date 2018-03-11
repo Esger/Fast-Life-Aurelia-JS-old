@@ -26,12 +26,12 @@ export class LifeCustomElement {
     }
 
     showStats() {
-        this.speed = this.lifeSteps - this.prevSteps;
+        let speed = this.lifeSteps - this.prevSteps;
         this.prevSteps = this.lifeSteps;
         this.ea.publish('stats', {
             cellCount: this.cellsAlive,
             generations: this.lifeSteps,
-            speed: this.speed * 2
+            speed: speed * 2
         });
     }
 
@@ -100,15 +100,15 @@ export class LifeCustomElement {
         this.offScreenCanvas.height = this.canvasHeight;
         this.ctxOffscreen = this.offScreenCanvas.getContext('2d');
         this.lifeSteps = 0; // Number of iterations / steps done
+        this.prevSteps = 0;
+        this.running = false;
         this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
-        if (this.speedHandle) {
-            clearInterval(this.speedHandle);
-        }
         this.speedHandle = setInterval(() => { this.showStats(); }, 500);
     }
 
     clear() {
         this.running = false;
+        this.stop();
         this.initLife();
         this.clearSpace();
     }
@@ -117,6 +117,7 @@ export class LifeCustomElement {
         this.running = false;
         if (this.speedHandle) {
             clearInterval(this.speedHandle);
+            this.speedHandle = null;
         }
     }
 
@@ -143,10 +144,8 @@ export class LifeCustomElement {
             this.opacity = 1 - this.trails * 0.9;
         });
         this.ea.subscribe('cellSize', response => {
-            this.stop();
             this.cellSize = response;
             this.initLife();
-            this.drawCells();
         });
         this.ea.subscribe('lifeRules', response => {
             this.liferules = response.liferules;

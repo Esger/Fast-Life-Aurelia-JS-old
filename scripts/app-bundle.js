@@ -327,12 +327,12 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         }
 
         LifeCustomElement.prototype.showStats = function showStats() {
-            this.speed = this.lifeSteps - this.prevSteps;
+            var speed = this.lifeSteps - this.prevSteps;
             this.prevSteps = this.lifeSteps;
             this.ea.publish('stats', {
                 cellCount: this.cellsAlive,
                 generations: this.lifeSteps,
-                speed: this.speed * 2
+                speed: speed * 2
             });
         };
 
@@ -391,10 +391,9 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.offScreenCanvas.height = this.canvasHeight;
             this.ctxOffscreen = this.offScreenCanvas.getContext('2d');
             this.lifeSteps = 0;
+            this.prevSteps = 0;
+            this.running = false;
             this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
-            if (this.speedHandle) {
-                clearInterval(this.speedHandle);
-            }
             this.speedHandle = setInterval(function () {
                 _this2.showStats();
             }, 500);
@@ -402,6 +401,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
 
         LifeCustomElement.prototype.clear = function clear() {
             this.running = false;
+            this.stop();
             this.initLife();
             this.clearSpace();
         };
@@ -410,6 +410,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.running = false;
             if (this.speedHandle) {
                 clearInterval(this.speedHandle);
+                this.speedHandle = null;
             }
         };
 
@@ -438,10 +439,8 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
                 _this3.opacity = 1 - _this3.trails * 0.9;
             });
             this.ea.subscribe('cellSize', function (response) {
-                _this3.stop();
                 _this3.cellSize = response;
                 _this3.initLife();
-                _this3.drawCells();
             });
             this.ea.subscribe('lifeRules', function (response) {
                 _this3.liferules = response.liferules;
@@ -605,7 +604,7 @@ define('resources/elements/tabs',['exports', 'aurelia-framework', 'aurelia-event
     }()) || _class);
 });
 define('text!app.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/main\"></require>\n    <main></main>\n</template>"; });
-define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/stats\"></require>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           class.bind=\"pulsor ? 'pulsor' : ''\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n        <input id=\"trails\"\n               type=\"checkbox\"\n               checked.bind=\"trails\"\n               change.delegate=\"toggleTrails()\" />\n        <label class=\"trails\"\n               for=\"trails\"> Trails</label>\n        <input class=\"cellSize\"\n               type=\"range\"\n               title=\"cell size ${cellSize}\"\n               min.one-time=\"minCellSize\"\n               max.one-time=\"maxCellSize\"\n               value.bind=\"cellSizeExp\"\n               change.delegate=\"setCellSize()\">\n        <output value.bind=\"cellSize\"></output>\n    </life-controls>\n    <stats></stats>\n</template>"; });
+define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/stats\"></require>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           class.bind=\"pulsor ? 'pulsor' : ''\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n        <input id=\"trails\"\n               type=\"checkbox\"\n               checked.bind=\"trails\"\n               change.delegate=\"toggleTrails()\" />\n        <label class=\"trails\"\n               for=\"trails\"> Trails</label>\n        <input class=\"cellSize\"\n               type=\"range\"\n               title=\"cell size ${cellSize}\"\n               min.one-time=\"minCellSize\"\n               max.one-time=\"maxCellSize\"\n               value.bind=\"cellSizeExp\"\n               change.delegate=\"setCellSize()\"\n               focus.delegate=\"stop()\">\n        <output value.bind=\"cellSize\"></output>\n    </life-controls>\n    <stats></stats>\n</template>"; });
 define('text!resources/elements/life.html', ['module'], function(module) { module.exports = "<template>\n    <canvas id=\"life\"\n            width=\"750\"\n            height=\"464\">\n    </canvas>\n</template>"; });
 define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <require from=\"resources/elements/controls\"></require>\n    <require from=\"resources/elements/tabs\"></require>\n    <h1>Fast Life | AureliaJS<a href=\"/\">ashWare</a></h1>\n    <life></life>\n    <controls></controls>\n    <tabs></tabs>\n</template>"; });
 define('text!resources/elements/stats.html', ['module'], function(module) { module.exports = "<template>\n    <p>generations: ${generations} | cells: ${cellCount} | ${speed} gen/s</p>\n</template>"; });

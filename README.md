@@ -12,5 +12,5 @@
     <li>Web-worker for computing of life generations</li>
     <li>Heavy computing stos automatically when Life get's stable</li>
 </ul>
-<p>Don't hesitate to check out my other games and projects at <a href="/"
+<p>Don&rsquo;t hesitate to check out my other games and projects at <a href="/"
         target="_blank">ashWare.nl</a></p>

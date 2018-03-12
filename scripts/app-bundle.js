@@ -169,13 +169,14 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         function LifeCustomElement(eventAggregator, lifeWorkerService) {
             _classCallCheck(this, LifeCustomElement);
 
+            this.speedHandle = null;
+
             this.ea = eventAggregator;
             this.lfWs = lifeWorkerService;
             this.cellSize = 2;
             this.cellsAlive = 0;
             this.liferules = [];
             this.trails = true;
-            this.speedHandle = null;
             this.running = false;
             this.opacity = 1 - this.trails * 0.9;
             this.cellCounts = [];
@@ -249,8 +250,8 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.ctxOffscreen = this.offScreenCanvas.getContext('2d');
             this.lifeSteps = 0;
             this.prevSteps = 0;
-            this.running = false;
             this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
+            this.stop();
             this.speedHandle = setInterval(function () {
                 _this2.showStats();
             }, 500);
@@ -534,9 +535,30 @@ define('resources/elements/tabs',['exports', 'aurelia-framework', 'aurelia-event
 
     var _dec, _class;
 
-    var TabsCustomElement = exports.TabsCustomElement = (_dec = (0, _aureliaFramework.inject)(_aureliaEventAggregator.EventAggregator), _dec(_class = function TabsCustomElement(eventAggregator) {
-        _classCallCheck(this, TabsCustomElement);
-    }) || _class);
+    var TabsCustomElement = exports.TabsCustomElement = (_dec = (0, _aureliaFramework.inject)(_aureliaEventAggregator.EventAggregator), _dec(_class = function () {
+        function TabsCustomElement(eventAggregator) {
+            _classCallCheck(this, TabsCustomElement);
+
+            this.tabs = [{
+                title: 'Life Rules',
+                active: true
+            }, {
+                title: 'Story',
+                active: false
+            }];
+        }
+
+        TabsCustomElement.prototype.activateTab = function activateTab(i) {
+            var tabs = this.tabs.slice();
+            tabs.forEach(function (tab) {
+                tab.active = false;
+            });
+            tabs[i].active = true;
+            this.tabs = tabs;
+        };
+
+        return TabsCustomElement;
+    }()) || _class);
 });
 define('resources/services/life-worker-service',['exports', 'aurelia-framework', 'aurelia-event-aggregator'], function (exports, _aureliaFramework, _aureliaEventAggregator) {
     'use strict';
@@ -654,11 +676,29 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         return LifeWorkerService;
     }()) || _class);
 });
+define('resources/elements/story',["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  var StoryCustomElement = exports.StoryCustomElement = function StoryCustomElement() {
+    _classCallCheck(this, StoryCustomElement);
+  };
+});
 define('text!app.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/main\"></require>\n    <main></main>\n</template>"; });
 define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/stats\"></require>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           class.bind=\"clearPulsor ? 'pulsor' : ''\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           class.bind=\"startPulsor ? 'pulsor' : ''\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n    </life-controls>\n    <stats></stats>\n</template>"; });
 define('text!resources/elements/life.html', ['module'], function(module) { module.exports = "<template>\n    <canvas id=\"life\"\n            width=\"750\"\n            height=\"464\">\n    </canvas>\n</template>"; });
 define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <require from=\"resources/elements/controls\"></require>\n    <require from=\"resources/elements/tabs\"></require>\n    <h1>Fast Life | AureliaJS<a href=\"/\">ashWare</a></h1>\n    <life></life>\n    <controls></controls>\n    <tabs></tabs>\n</template>"; });
 define('text!resources/elements/settings.html', ['module'], function(module) { module.exports = "<template>\n\n    <tab-content class=\"lifeRules\">\n        <row-labels>\n            <p title=\"Preset life rules\">Presets</p>\n        </row-labels>\n        <life-rules>\n            <select change.delegate=\"setPreset()\"\n                    value.bind=\"selectedPreset\"> \n                <option repeat.for=\"preset of presets\"  \n                    model.bind=\"$index\" \n                    innerhtml.one-time=\"preset.name\"> \n                </option> \n            </select>\n        </life-rules>\n    </tab-content>\n\n    <tab-content class=\"lifeRules\">\n        <row-labels>\n            <p title=\"Neighbour count to stay alive\">New</p>\n            <p title=\"Neighbour count to come alive\">Stay</p>\n        </row-labels>\n        <life-rules>\n            <life-rule repeat.for=\"rule of liferules\"\n                       if.bind=\"$index !== 9\">\n                <input type=\"checkbox\"\n                       checked.bind=\"rule\"\n                       id.one-time=\"'rule_'+$index\"\n                       change.delegate=\"setRules($index)\">\n                <label for.one-time=\"'rule_'+$index\">${$index % 10}</label>\n            </life-rule>\n        </life-rules>\n    </tab-content>\n\n    <tab-content class=\"lifeRules\">\n        <row-labels>\n            <p title=\"Preset life rules\">Cell size</p>\n        </row-labels>\n        <life-rules>\n            <input class=\"cellSize\"\n                   type=\"range\"\n                   title=\"cell size ${cellSize}\"\n                   min.one-time=\"minCellSize\"\n                   max.one-time=\"maxCellSize\"\n                   value.bind=\"cellSizeExp\"\n                   change.delegate=\"setCellSize()\"\n                   focus.delegate=\"stop()\">\n            <output value.bind=\"cellSize\"></output>\n            <input id=\"trails\"\n                   type=\"checkbox\"\n                   checked.bind=\"trails\"\n                   change.delegate=\"toggleTrails()\" />\n            <label class=\"trails\"\n                   for=\"trails\"> Trails</label>\n\n        </life-rules>\n    </tab-content>\n\n</template>"; });
 define('text!resources/elements/stats.html', ['module'], function(module) { module.exports = "<template>\n    <p>generations: ${generations} | cells: ${cellCount} | ${speed} gen/s</p>\n</template>"; });
-define('text!resources/elements/tabs.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/settings\"></require>\n    <tab-buttons>\n        <tab-button click.delegate=\"activateTab(1)\"\n                    class=\"active\">Life Rules</tab-button>\n        <tab-button click.delegate=\"activateTab(2)\">Story</tab-button>\n    </tab-buttons>\n    <tab-contents>\n        <settings></settings>\n    </tab-contents>\n</template>"; });
+define('text!resources/elements/tabs.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/settings\"></require>\n    <require from=\"resources/elements/story\"></require>\n    <tab-buttons>\n        <tab-button repeat.for=\"tab of tabs\"\n                    click.delegate=\"activateTab($index)\"\n                    class.bind=\"tab.active ? 'active' : ''\">${tab.title}</tab-button>\n    </tab-buttons>\n    <tab-contents>\n        <settings if.bind=\"tabs[0].active\"></settings>\n        <story if.bind=\"tabs[1].active\"></story>\n    </tab-contents>\n</template>"; });
+define('text!resources/elements/story.html', ['module'], function(module) { module.exports = "<template>\n    <p>Yo story</p>\n</template>"; });
 //# sourceMappingURL=app-bundle.js.map

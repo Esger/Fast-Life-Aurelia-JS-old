@@ -9,6 +9,8 @@ import { LifeWorkerService } from 'resources/services/life-worker-service';
 @inject(EventAggregator, LifeWorkerService)
 export class LifeCustomElement {
 
+    speedHandle = null;
+
     // TODO try this https://hacks.mozilla.org/2011/12/faster-canvas-pixel-manipulation-with-typed-arrays/
     constructor(eventAggregator, lifeWorkerService) {
         this.ea = eventAggregator;
@@ -17,7 +19,6 @@ export class LifeCustomElement {
         this.cellsAlive = 0;
         this.liferules = [];
         this.trails = true;
-        this.speedHandle = null;
         this.running = false;
         this.opacity = 1 - this.trails * 0.9;
         this.cellCounts = [];
@@ -101,8 +102,8 @@ export class LifeCustomElement {
         this.ctxOffscreen = this.offScreenCanvas.getContext('2d');
         this.lifeSteps = 0; // Number of iterations / steps done
         this.prevSteps = 0;
-        this.running = false;
         this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
+        this.stop();
         this.speedHandle = setInterval(() => { this.showStats(); }, 500);
     }
 

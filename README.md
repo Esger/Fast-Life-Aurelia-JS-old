@@ -10,7 +10,7 @@
     <li>Rule presets that sync with your own settings if there&rsquo;s a match</li>
     <li>Optional &lsquo;trails&rsquo; to smooth things out</li>
     <li>Web-worker for computing of life generations</li>
-    <li>Heavy computing stos automatically when Life get's stable</li>
+    <li>Heavy computing stops automatically when Life get's stable</li>
 </ul>
 <p>Don&rsquo;t hesitate to check out my other games and projects at <a href="/"
         target="_blank">ashWare.nl</a></p>

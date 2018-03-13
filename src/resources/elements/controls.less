@@ -1,11 +1,22 @@
 controls {
-    display        : flex;
-    justify-content: space-between;
+    display         : -webkit-box;
+    display         : -ms-flexbox;
+    display         : flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack   : justify;
+    justify-content : space-between;
+    margin-bottom   : 36px;
 
     life-controls {
-        display        : flex;
-        justify-content: flex-start;
-        align-items    : center;
+        display          : -webkit-box;
+        display          : -ms-flexbox;
+        display          : flex;
+        -webkit-box-pack : start;
+        -ms-flex-pack    : start;
+        justify-content  : flex-start;
+        -webkit-box-align: center;
+        -ms-flex-align   : center;
+        align-items      : center;
 
         a {
             width           : 24px;
@@ -14,64 +25,27 @@ controls {
             background-color: transparent;
         }
 
-        label {
-            font-size: 14px;
-        }
-
-        input+output {
-            margin-left: 5px;
-        }
-
-        [type=checkbox] {
-            transform: scale(0.000001);
-
-            &+label {
-                display         : flex;
-                font-weight     : bold;
-                color           : #dd0;
-                background-color: #8a8a00;
-                height          : 21px;
-                line-height     : 21px;
-                padding         : 0 20px 0 10px;
-                border-radius   : 2px;
-                margin-right    : 20px;
-                cursor          : pointer;
-
-                &::before {
-                    content: '√';
-                    flex   : 1 0 15px;
-                    opacity: 0;
-                }
-
-                &::after {
-                    content: '';
-                    flex   : 0 0 1px;
-                    opacity: 0;
-                }
-            }
-
-            &:checked {
-                &+label {
-                    color: whitesmoke;
-
-                    &::after, &::before {
-                        opacity: 1;
-                    }
-                }
-            }
-
-        }
-
         [class*=button] {
             margin-right: 10px;
         }
 
         .clearbutton {
-            width        : 20px;
-            height       : 20px;
-            border-radius: 2px;
-            box-sizing   : border-box;
-            border       : 2px solid #8a8a00;
+            width             : 20px;
+            height            : 20px;
+            border-radius     : 2px;
+            -webkit-box-sizing: border-box;
+            box-sizing        : border-box;
+            border            : 2px solid #8a8a00;
+
+            &.pulsor::before {
+                content      : '';
+                display      : block;
+                width        : calc(~'100% + 4px');
+                height       : calc(~'100% + 4px');
+                margin       : -3px;
+                border       : 1px solid whitesmoke;
+                border-radius: 3px;
+            }
 
             &:hover {
                 border-color: whitesmoke;
@@ -109,12 +83,13 @@ controls {
         }
 
         .stopbutton {
-            width           : 20px;
-            height          : 20px;
-            border-radius   : 2px;
-            box-sizing      : border-box;
-            border          : 2px solid #8a8a00;
-            background-color: #8a8a00;
+            width             : 20px;
+            height            : 20px;
+            border-radius     : 2px;
+            -webkit-box-sizing: border-box;
+            box-sizing        : border-box;
+            border            : 2px solid #8a8a00;
+            background-color  : #8a8a00;
 
             &:hover {
                 border-color    : whitesmoke;
@@ -134,37 +109,37 @@ controls {
             }
         }
 
+        .trails {
+            margin-left: 20px;
+        }
+
         .pulsor:not(:hover), .pulsor:not(:hover)::after, .pulsor:not(:hover)::before {
-            box-shadow       : 0 0 30px rgba(255,255,255,1);
-            -webkit-animation: pulsate 1s infinite alternate;
-            -moz-animation   : pulsate 1s infinite alternate;
-            -animation       : pulsate 1s infinite alternate;
+            -webkit-box-shadow: 0 0 30px whitesmoke;
+            box-shadow        : 0 0 30px whitesmoke;
+            -webkit-animation : pulsate 1s infinite alternate;
+            -moz-animation    : pulsate 1s infinite alternate;
+            -animation        : pulsate 1s infinite alternate;
         }
         @-webkit-keyframes pulsate {
             from {
-                box-shadow: 0 0 10px rgba(255,255,255,0);
+                -webkit-box-shadow: 0 0 10px rgba(255,255,255,0);
+                box-shadow        : 0 0 10px rgba(255,255,255,0);
             }
 
             to {
-                box-shadow: 0 0 20px rgba(255,255,255,1);
-            }
-        }
-        @-moz-keyframes pulsate {
-            from {
-                box-shadow: 0 0 10px rgba(255,255,255,0);
-            }
-
-            to {
-                box-shadow: 0 0 20px rgba(255,255,255,1);
+                -webkit-box-shadow: 0 0 20px rgba(255,255,255,1);
+                box-shadow        : 0 0 20px rgba(255,255,255,1);
             }
         }
         @keyframes pulsate {
             from {
-                box-shadow: 0 0 10px rgba(255,255,255,0);
+                -webkit-box-shadow: 0 0 10px rgba(255,255,255,0);
+                box-shadow        : 0 0 10px rgba(255,255,255,0);
             }
 
             to {
-                box-shadow: 0 0 20px rgba(255,255,255,1);
+                -webkit-box-shadow: 0 0 20px rgba(255,255,255,1);
+                box-shadow        : 0 0 20px rgba(255,255,255,1);
             }
         }
     }

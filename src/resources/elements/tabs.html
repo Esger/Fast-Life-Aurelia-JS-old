@@ -1,25 +1,13 @@
 <template>
+    <require from="resources/elements/settings"></require>
+    <require from="resources/elements/story"></require>
     <tab-buttons>
-        <tab-button click.delegate="activateTab(1)"
-                    class="active">Life Rules</tab-button>
-        <tab-button click.delegate="activateTab(2)">Story</tab-button>
+        <tab-button repeat.for="tab of tabs"
+                    click.delegate="activateTab($index)"
+                    class.bind="tab.active ? 'active' : ''">${tab.title}</tab-button>
     </tab-buttons>
     <tab-contents>
-        <tab-content class="lifeRules">
-            <row-labels>
-                <p title="Neighbour count to stay alive">Stay</p>
-                <p title="Neighbour count to come alive">New</p>
-            </row-labels>
-            <life-rules>
-                <life-rule repeat.for="rule of liferules"
-                           if.bind="$index !== 9">
-                    <input type="checkbox"
-                           checked.bind="rule"
-                           id.one-time="'rule_'+$index"
-                           change.delegate="setRules($index)">
-                    <label for.one-time="'rule_'+$index">${$index % 10}</label>
-                </life-rule>
-            </life-rules>
-        </tab-content>
+        <settings if.bind="tabs[0].active"></settings>
+        <story if.bind="tabs[1].active"></story>
     </tab-contents>
 </template>

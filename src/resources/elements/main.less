@@ -42,7 +42,7 @@ input+output {
         line-height     : 21px;
         padding         : 0 20px 0 10px;
         border-radius   : 2px;
-        margin-right    : 20px;
+        margin-right    : 15px;
         cursor          : pointer;
 
         &::before {
@@ -69,4 +69,12 @@ input+output {
         }
     }
 
+}
+
+[type=range] {
+    margin: -10px 0 0;
+
+    &+output {
+        margin: 0 15px 0 10px;
+    }
 }

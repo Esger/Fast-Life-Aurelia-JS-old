@@ -10,14 +10,25 @@ import {
 export class TabsCustomElement {
 
     constructor(eventAggregator) {
-        this.ea = eventAggregator;
-        this.liferules = [
-            false, false, false, true, false, false, false, false, false, false,
-            false, false, true, true, false, false, false, false, false
-        ];
+        this.tabs = [
+            {
+                title: 'Life Rules',
+                active: true
+            },
+            {
+                title: 'Story',
+                active: false
+            }
+        ]
     }
-    setRules(i) {
-        this.liferules[i] = !this.liferules[i];
-        this.ea.publish('lifeRules', this.liferules);
+
+    activateTab(i) {
+        let tabs = this.tabs.slice();
+        tabs.forEach(tab => {
+            tab.active = false;
+        });
+        tabs[i].active = true;
+        this.tabs = tabs;
     }
+
 }

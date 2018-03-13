@@ -9,14 +9,16 @@ import { LifeWorkerService } from 'resources/services/life-worker-service';
 @inject(EventAggregator, LifeWorkerService)
 export class LifeCustomElement {
 
+    speedHandle = null;
+
     // TODO try this https://hacks.mozilla.org/2011/12/faster-canvas-pixel-manipulation-with-typed-arrays/
     constructor(eventAggregator, lifeWorkerService) {
         this.ea = eventAggregator;
         this.lfWs = lifeWorkerService;
         this.cellSize = 2;
         this.cellsAlive = 0;
+        this.liferules = [];
         this.trails = true;
-        this.speedHandle = null;
         this.running = false;
         this.opacity = 1 - this.trails * 0.9;
         this.cellCounts = [];
@@ -25,12 +27,12 @@ export class LifeCustomElement {
     }
 
     showStats() {
-        this.speed = this.lifeSteps - this.prevSteps;
+        let speed = this.lifeSteps - this.prevSteps;
         this.prevSteps = this.lifeSteps;
         this.ea.publish('stats', {
             cellCount: this.cellsAlive,
             generations: this.lifeSteps,
-            speed: this.speed * 2
+            speed: speed * 2
         });
     }
 
@@ -56,7 +58,7 @@ export class LifeCustomElement {
     }
 
     animateStep() {
-        this.drawFromStack();
+        this.drawCells();
         if (this.running && !this.stable) {
             setTimeout(() => { this.animateStep(); });
         } else {
@@ -64,7 +66,7 @@ export class LifeCustomElement {
         }
     }
 
-    drawFromStack() {
+    drawCells() {
         let cells = this.lfWs.cells;
         const cellSize = this.cellSize;
         const offScreen = this.ctxOffscreen;
@@ -78,6 +80,7 @@ export class LifeCustomElement {
                 let cell = cells[i]; i -= 1;
                 offScreen.fillRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize);
             }
+
             this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
             this.cellsAlive = cells.length;
             this.lifeSteps += 1;
@@ -97,29 +100,26 @@ export class LifeCustomElement {
         this.offScreenCanvas.width = this.canvasWidth;
         this.offScreenCanvas.height = this.canvasHeight;
         this.ctxOffscreen = this.offScreenCanvas.getContext('2d');
-
-        this.liferules = [
-            false, false, false, true, false, false, false, false, false, false,
-            false, false, true, true, false, false, false, false, false
-        ];
         this.lifeSteps = 0; // Number of iterations / steps done
-        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, this.cellSize);
-        if (this.speedHandle) {
-            clearInterval(this.speedHandle);
-        }
+        this.prevSteps = 0;
+        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
+        this.stop();
         this.speedHandle = setInterval(() => { this.showStats(); }, 500);
     }
 
     clear() {
         this.running = false;
+        this.stop();
         this.initLife();
         this.clearSpace();
     }
 
     stop() {
         this.running = false;
-        clearInterval(this.speedHandle);
-        setTimeout(this.showStats, 500);
+        if (this.speedHandle) {
+            clearInterval(this.speedHandle);
+            this.speedHandle = null;
+        }
     }
 
     start() {
@@ -138,7 +138,7 @@ export class LifeCustomElement {
             this.start();
         });
         this.ea.subscribe('step', () => {
-            this.drawFromStack();
+            this.drawCells();
         });
         this.ea.subscribe('toggleTrails', () => {
             this.trails = !this.trails;
@@ -146,18 +146,19 @@ export class LifeCustomElement {
         });
         this.ea.subscribe('cellSize', response => {
             this.cellSize = response;
-            this.stop();
             this.initLife();
-            this.start();
         });
         this.ea.subscribe('lifeRules', response => {
-            this.liferules = response;
-            this.lfWs.changeRules(this.liferules);
+            this.liferules = response.liferules;
+            if (response.init) {
+                this.initLife();
+            } else {
+                this.lfWs.changeRules(this.liferules);
+            }
         });
     }
 
     attached() {
-        this.initLife();
         this.addListeners();
     }
 

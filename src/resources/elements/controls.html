@@ -3,6 +3,7 @@
     <life-controls>
         <a href="#"
            class="clearbutton"
+           class.bind="clearPulsor ? 'pulsor' : ''"
            title="Clear"
            click.delegate="clear()"></a>
         <a href="#"
@@ -15,23 +16,9 @@
            click.delegate="step()"></a>
         <a href="#"
            class="startbutton"
-           class.bind="pulsor ? 'pulsor' : ''"
+           class.bind="startPulsor ? 'pulsor' : ''"
            title="Start"
            click.delegate="start()"></a>
-        <input id="trails"
-               type="checkbox"
-               checked.bind="trails"
-               change.delegate="toggleTrails()" />
-        <label class="trails"
-               for="trails"> Trails</label>
-        <input class="cellSize"
-               type="range"
-               title="cell size ${cellSize}"
-               min.one-time="minCellSize"
-               max.one-time="maxCellSize"
-               value.bind="cellSizeExp"
-               change.delegate="setCellSize()">
-        <output value.bind="cellSize"></output>
     </life-controls>
     <stats></stats>
 </template>

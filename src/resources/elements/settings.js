@@ -43,6 +43,10 @@ export class SettingsCustomElement {
         this.cellSizeExp = 1;
         this.minCellSize = 0;
         this.maxCellSize = 5;
+        this.grid = false;
+        this.gridSizeExp = 3;
+        this.minGridSize = 2;
+        this.maxGridSize = 5;
         this.setPreset();
     }
 
@@ -50,12 +54,24 @@ export class SettingsCustomElement {
         return Math.pow(2, this.cellSizeExp);
     }
 
+    get gridSize() {
+        return Math.pow(2, this.gridSizeExp);
+    }
+
     toggleTrails() {
         this.ea.publish('toggleTrails', this.trails);
     }
 
+    toggleGrid() {
+        this.ea.publish('toggleGrid', this.grid);
+    }
+
     setCellSize() {
         this.ea.publish('cellSize', this.cellSize);
+    }
+
+    setGridSize() {
+        this.ea.publish('gridSize', this.gridSize);
     }
 
     setPreset() {

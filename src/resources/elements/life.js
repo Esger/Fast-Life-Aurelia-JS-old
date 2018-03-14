@@ -25,6 +25,8 @@ export class LifeCustomElement {
         this.cellCounts = [];
         this.lastMean = 0;
         this.stableCountDown = 20;
+        this.gridSize = 8;
+        this.grid = false;
     }
 
     showStats() {
@@ -74,6 +76,9 @@ export class LifeCustomElement {
         if (cells) {
             offScreen.fillStyle = "rgba(255, 255, 255, " + this.opacity + ")";
             offScreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            if (this.grid) {
+                this.drawgrid();
+            }
 
             offScreen.fillStyle = "rgba(128, 128, 0, 1)";
             let i = cells.length - 1;
@@ -85,6 +90,33 @@ export class LifeCustomElement {
             this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
             this.cellsAlive = cells.length;
             this.lifeSteps += 1;
+        }
+    }
+
+    drawgrid(onScreen) {
+        const offScreen = this.ctxOffscreen;
+        const cellSize = this.cellSize;
+        const gridSize = Math.max(this.gridSize, 2) * cellSize;
+        offScreen.lineWidth = 1;
+        offScreen.strokeStyle = "#c2c2c2";
+        let y = gridSize;
+        for (; y < this.canvas.height; y += gridSize) {
+            offScreen.beginPath();
+            offScreen.moveTo(0, y - 0.5);
+            offScreen.lineTo(this.canvas.width, y - 0.5);
+            offScreen.stroke();
+            offScreen.closePath();
+        }
+        let x = gridSize;
+        for (; x < this.canvas.width; x += gridSize) {
+            offScreen.beginPath();
+            offScreen.moveTo(x - 0.5, 0);
+            offScreen.lineTo(x - 0.5, this.canvas.height);
+            offScreen.stroke();
+            offScreen.closePath();
+        }
+        if (onScreen) {
+            this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
         }
     }
 
@@ -153,9 +185,18 @@ export class LifeCustomElement {
             this.trails = !this.trails;
             this.opacity = 1 - this.trails * 0.9;
         });
+        this.ea.subscribe('toggleGrid', () => {
+            this.grid = !this.grid;
+            if (this.grid) {
+                this.drawgrid(true);
+            }
+        });
         this.ea.subscribe('cellSize', response => {
             this.cellSize = response;
             this.initLife();
+        });
+        this.ea.subscribe('gridSize', response => {
+            this.gridSize = response;
         });
         this.ea.subscribe('lifeRules', response => {
             this.liferules = response.liferules;

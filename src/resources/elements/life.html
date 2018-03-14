@@ -1,6 +1,8 @@
 <template>
     <canvas id="life"
             width="750"
-            height="464">
+            height="464"
+            mouseenter.trigger="slowDown()"
+            mouseleave.trigger="fullSpeed()">
     </canvas>
 </template>

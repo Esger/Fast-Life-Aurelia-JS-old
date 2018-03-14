@@ -169,13 +169,14 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         function LifeCustomElement(eventAggregator, lifeWorkerService) {
             _classCallCheck(this, LifeCustomElement);
 
-            this.speedHandle = null;
+            this.statusUpdateHandle = null;
 
             this.ea = eventAggregator;
             this.lfWs = lifeWorkerService;
             this.cellSize = 2;
             this.cellsAlive = 0;
             this.liferules = [];
+            this.speedInterval = 0;
             this.trails = true;
             this.running = false;
             this.opacity = 1 - this.trails * 0.9;
@@ -206,7 +207,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             if (this.running && !this.stable) {
                 setTimeout(function () {
                     _this.animateStep();
-                });
+                }, this.speedInterval);
             } else {
                 this.stop();
             }
@@ -252,9 +253,17 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.prevSteps = 0;
             this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
             this.stop();
-            this.speedHandle = setInterval(function () {
+            this.statusUpdateHandle = setInterval(function () {
                 _this2.showStats();
             }, 500);
+        };
+
+        LifeCustomElement.prototype.slowDown = function slowDown() {
+            this.speedInterval = 500;
+        };
+
+        LifeCustomElement.prototype.fullSpeed = function fullSpeed() {
+            this.speedInterval = 0;
         };
 
         LifeCustomElement.prototype.clear = function clear() {
@@ -266,9 +275,9 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
 
         LifeCustomElement.prototype.stop = function stop() {
             this.running = false;
-            if (this.speedHandle) {
-                clearInterval(this.speedHandle);
-                this.speedHandle = null;
+            if (this.statusUpdateHandle) {
+                clearInterval(this.statusUpdateHandle);
+                this.statusUpdateHandle = null;
             }
         };
 
@@ -695,10 +704,10 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
 });
 define('text!app.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/main\"></require>\n    <main></main>\n</template>"; });
 define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/stats\"></require>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           class.bind=\"clearPulsor ? 'pulsor' : ''\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           class.bind=\"startPulsor ? 'pulsor' : ''\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n    </life-controls>\n    <stats></stats>\n</template>"; });
-define('text!resources/elements/life.html', ['module'], function(module) { module.exports = "<template>\n    <canvas id=\"life\"\n            width=\"750\"\n            height=\"464\">\n    </canvas>\n</template>"; });
+define('text!resources/elements/life.html', ['module'], function(module) { module.exports = "<template>\n    <canvas id=\"life\"\n            width=\"750\"\n            height=\"464\"\n            mouseenter.trigger=\"slowDown()\"\n            mouseleave.trigger=\"fullSpeed()\">\n    </canvas>\n</template>"; });
 define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <require from=\"resources/elements/controls\"></require>\n    <require from=\"resources/elements/tabs\"></require>\n    <h1>Fast Life | AureliaJS<a href=\"/\">ashWare</a></h1>\n    <life></life>\n    <controls></controls>\n    <tabs></tabs>\n</template>"; });
 define('text!resources/elements/settings.html', ['module'], function(module) { module.exports = "<template>\n\n    <tab-content class=\"lifeRules\">\n        <row-labels>\n            <p title=\"Preset life rules\">Presets</p>\n        </row-labels>\n        <life-rules>\n            <select change.delegate=\"setPreset()\"\n                    value.bind=\"selectedPreset\"> \n                <option repeat.for=\"preset of presets\"  \n                    model.bind=\"$index\" \n                    innerhtml.one-time=\"preset.name\"> \n                </option> \n            </select>\n        </life-rules>\n    </tab-content>\n\n    <tab-content class=\"lifeRules\">\n        <row-labels>\n            <p title=\"Neighbour count to stay alive\">New</p>\n            <p title=\"Neighbour count to come alive\">Stay</p>\n        </row-labels>\n        <life-rules>\n            <life-rule repeat.for=\"rule of liferules\"\n                       if.bind=\"$index !== 9\">\n                <input type=\"checkbox\"\n                       checked.bind=\"rule\"\n                       id.one-time=\"'rule_'+$index\"\n                       change.delegate=\"setRules($index)\">\n                <label for.one-time=\"'rule_'+$index\">${$index % 10}</label>\n            </life-rule>\n        </life-rules>\n    </tab-content>\n\n    <tab-content class=\"lifeRules\">\n        <row-labels>\n            <p title=\"Preset life rules\">Cell size</p>\n        </row-labels>\n        <life-rules>\n            <input class=\"cellSize\"\n                   type=\"range\"\n                   title=\"cell size ${cellSize}\"\n                   min.one-time=\"minCellSize\"\n                   max.one-time=\"maxCellSize\"\n                   value.bind=\"cellSizeExp\"\n                   change.delegate=\"setCellSize()\"\n                   focus.delegate=\"stop()\">\n            <output value.bind=\"cellSize\"></output>\n            <input id=\"trails\"\n                   type=\"checkbox\"\n                   checked.bind=\"trails\"\n                   change.delegate=\"toggleTrails()\" />\n            <label class=\"trails\"\n                   for=\"trails\"> Trails</label>\n\n        </life-rules>\n    </tab-content>\n\n</template>"; });
 define('text!resources/elements/stats.html', ['module'], function(module) { module.exports = "<template>\n    <p>generations: ${generations} | cells: ${cellCount} | ${speed} gen/s</p>\n</template>"; });
-define('text!resources/elements/story.html', ['module'], function(module) { module.exports = "<template>\n    <h2>Pushing Aurelia JS to speed</h2>\n    <p>Conway's Game Of Life has been a vehicle to learn new things to me for many years; here I&rsquo;m experimenting to see if Aurelia can match a <a href=\"/graylife\"\n           target=\"_blank\">Vanilla js version</a> &mdash; It does. Take look at <a href=\"https://nl.wikipedia.org/wiki/Game_of_Life\"\n           target=\"_blank\">this wikipedia page for a description of GOL</a></p>\n    <p>The modular nature of Aurelia invited me to enhance the UI / layout as well.</p>\n    <h2>Features</h2>\n    <ul>\n        <li>Easy buttons to experiment with the rules</li>\n        <li>Rule presets that sync with your own settings if there&rsquo;s a match</li>\n        <li>Optional &lsquo;trails&rsquo; to smooth things out</li>\n        <li>Web-worker for computing of life generations</li>\n        <li>Heavy computing stos automatically when Life get's stable</li>\n    </ul>\n    <p>Don't hesitate to check out my other games and projects at <a href=\"/\"\n           target=\"_blank\">ashWare.nl</a></p>\n</template>"; });
+define('text!resources/elements/story.html', ['module'], function(module) { module.exports = "<template>\n    <h2>Pushing Aurelia JS to speed</h2>\n    <p>Conway's Game Of Life has been a vehicle to learn new things to me for many years; here I&rsquo;m experimenting to see if Aurelia can match a <a href=\"/graylife\"\n           target=\"_blank\">Vanilla js version</a> &mdash; It does. Take look at <a href=\"https://nl.wikipedia.org/wiki/Game_of_Life\"\n           target=\"_blank\">this wikipedia page for a description of GOL</a></p>\n    <p>The modular nature of Aurelia invited me to enhance the UI / layout as well.</p>\n    <h2>Features</h2>\n    <ul>\n        <li>Easy buttons to experiment with the rules</li>\n        <li>Rule presets that sync with your own settings if there&rsquo;s a match</li>\n        <li>Optional &lsquo;trails&rsquo; to smooth things out</li>\n        <li>Slow life when hovering over the canvas</li>\n        <li>Web-worker for computing of life generations</li>\n        <li>Heavy computing stos automatically when Life get's stable</li>\n    </ul>\n    <p>Don't hesitate to check out my other games and projects at <a href=\"/\"\n           target=\"_blank\">ashWare.nl</a></p>\n</template>"; });
 define('text!resources/elements/tabs.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/settings\"></require>\n    <require from=\"resources/elements/story\"></require>\n    <tab-buttons>\n        <tab-button repeat.for=\"tab of tabs\"\n                    click.delegate=\"activateTab($index)\"\n                    class.bind=\"tab.active ? 'active' : ''\">${tab.title}</tab-button>\n    </tab-buttons>\n    <tab-contents>\n        <settings if.bind=\"tabs[0].active\"></settings>\n        <story if.bind=\"tabs[1].active\"></story>\n    </tab-contents>\n</template>"; });
 //# sourceMappingURL=app-bundle.js.map

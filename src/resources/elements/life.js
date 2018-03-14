@@ -9,7 +9,7 @@ import { LifeWorkerService } from 'resources/services/life-worker-service';
 @inject(EventAggregator, LifeWorkerService)
 export class LifeCustomElement {
 
-    speedHandle = null;
+    statusUpdateHandle = null;
 
     // TODO try this https://hacks.mozilla.org/2011/12/faster-canvas-pixel-manipulation-with-typed-arrays/
     constructor(eventAggregator, lifeWorkerService) {
@@ -18,6 +18,7 @@ export class LifeCustomElement {
         this.cellSize = 2;
         this.cellsAlive = 0;
         this.liferules = [];
+        this.speedInterval = 0;
         this.trails = true;
         this.running = false;
         this.opacity = 1 - this.trails * 0.9;
@@ -60,7 +61,7 @@ export class LifeCustomElement {
     animateStep() {
         this.drawCells();
         if (this.running && !this.stable) {
-            setTimeout(() => { this.animateStep(); });
+            setTimeout(() => { this.animateStep(); }, this.speedInterval);
         } else {
             this.stop();
         }
@@ -104,7 +105,15 @@ export class LifeCustomElement {
         this.prevSteps = 0;
         this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
         this.stop();
-        this.speedHandle = setInterval(() => { this.showStats(); }, 500);
+        this.statusUpdateHandle = setInterval(() => { this.showStats(); }, 500);
+    }
+
+    slowDown() {
+        this.speedInterval = 500;
+    }
+
+    fullSpeed() {
+        this.speedInterval = 0;
     }
 
     clear() {
@@ -116,9 +125,9 @@ export class LifeCustomElement {
 
     stop() {
         this.running = false;
-        if (this.speedHandle) {
-            clearInterval(this.speedHandle);
-            this.speedHandle = null;
+        if (this.statusUpdateHandle) {
+            clearInterval(this.statusUpdateHandle);
+            this.statusUpdateHandle = null;
         }
     }
 

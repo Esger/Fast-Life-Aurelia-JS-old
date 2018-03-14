@@ -222,8 +222,6 @@ controls life-controls .pulsor:not(:hover)::after,
 controls life-controls .pulsor:not(:hover)::before {
   -webkit-box-shadow: 0 0 30px whitesmoke;
   box-shadow: 0 0 30px whitesmoke;
-  -webkit-animation: pulsate 1s infinite alternate;
-  -moz-animation: pulsate 1s infinite alternate;
   -animation: pulsate 1s infinite alternate;
 }
 @-webkit-keyframes pulsate {
@@ -263,7 +261,11 @@ h1 {
   font-weight: bold;
   font-size: 24px;
   line-height: 24px;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
   justify-content: space-between;
 }
 h1 a {
@@ -282,6 +284,8 @@ input + output {
   display: none;
 }
 [type=checkbox] + label {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
   font-weight: bold;
   color: #dd0;
@@ -295,12 +299,16 @@ input + output {
 }
 [type=checkbox] + label::before {
   content: '\2713';
+  -webkit-box-flex: 1;
+  -ms-flex: 1 0 15px;
   flex: 1 0 15px;
   padding-top: 1px;
   opacity: 0;
 }
 [type=checkbox] + label::after {
   content: '';
+  -webkit-box-flex: 0;
+  -ms-flex: 0 0 1px;
   flex: 0 0 1px;
   opacity: 0;
 }
@@ -318,7 +326,10 @@ input + output {
   margin: 0 15px 0 10px;
 }
 life-rules {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
+  -ms-flex-wrap: wrap;
   flex-wrap: wrap;
 }
 life-rules [type=checkbox] + label {
@@ -334,9 +345,13 @@ row-labels p {
   margin-bottom: 10px;
 }
 .lifeRules {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
 }
 .lifeRules row-labels {
+  -webkit-box-flex: 0;
+  -ms-flex: 0 0 100px;
   flex: 0 0 100px;
 }
 .lifeRules row-labels p {
@@ -359,6 +374,8 @@ tabs {
   display: block;
 }
 tab-buttons {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
   margin-bottom: -2px;
 }
@@ -366,11 +383,14 @@ tab-button {
   padding: 2px 10px 0;
   border: 2px solid #8a8a00;
   border-radius: 3px;
+  -webkit-box-shadow: inset 0 -4px 10px 0 rgba(4, 4, 4, 0.5);
   box-shadow: inset 0 -4px 10px 0 rgba(4, 4, 4, 0.5);
+  -webkit-transition: all .3s;
   transition: all .3s;
 }
 tab-button.active {
   border-bottom-color: #dd0;
+  -webkit-box-shadow: none;
   box-shadow: none;
   font-weight: bold;
 }
@@ -382,5 +402,6 @@ tab-contents {
   border: 2px solid #8a8a00;
   border-radius: 0 3px 3px 3px;
   padding: 20px 10px 10px;
+  -webkit-transition: all .3s;
   transition: all .3s;
 }

@@ -1,22 +1,12 @@
 controls {
-    display         : -webkit-box;
-    display         : -ms-flexbox;
-    display         : flex;
-    -webkit-box-pack: justify;
-    -ms-flex-pack   : justify;
-    justify-content : space-between;
-    margin-bottom   : 36px;
+    display        : flex;
+    justify-content: space-between;
+    margin-bottom  : 36px;
 
     life-controls {
-        display          : -webkit-box;
-        display          : -ms-flexbox;
-        display          : flex;
-        -webkit-box-pack : start;
-        -ms-flex-pack    : start;
-        justify-content  : flex-start;
-        -webkit-box-align: center;
-        -ms-flex-align   : center;
-        align-items      : center;
+        display        : flex;
+        justify-content: flex-start;
+        align-items    : center;
 
         a {
             width           : 24px;
@@ -30,12 +20,11 @@ controls {
         }
 
         .clearbutton {
-            width             : 20px;
-            height            : 20px;
-            border-radius     : 2px;
-            -webkit-box-sizing: border-box;
-            box-sizing        : border-box;
-            border            : 2px solid #8a8a00;
+            width        : 20px;
+            height       : 20px;
+            border-radius: 2px;
+            box-sizing   : border-box;
+            border       : 2px solid #8a8a00;
 
             &.pulsor::before {
                 content      : '';
@@ -83,13 +72,12 @@ controls {
         }
 
         .stopbutton {
-            width             : 20px;
-            height            : 20px;
-            border-radius     : 2px;
-            -webkit-box-sizing: border-box;
-            box-sizing        : border-box;
-            border            : 2px solid #8a8a00;
-            background-color  : #8a8a00;
+            width           : 20px;
+            height          : 20px;
+            border-radius   : 2px;
+            box-sizing      : border-box;
+            border          : 2px solid #8a8a00;
+            background-color: #8a8a00;
 
             &:hover {
                 border-color    : whitesmoke;
@@ -114,32 +102,16 @@ controls {
         }
 
         .pulsor:not(:hover), .pulsor:not(:hover)::after, .pulsor:not(:hover)::before {
-            -webkit-box-shadow: 0 0 30px whitesmoke;
-            box-shadow        : 0 0 30px whitesmoke;
-            -webkit-animation : pulsate 1s infinite alternate;
-            -moz-animation    : pulsate 1s infinite alternate;
-            -animation        : pulsate 1s infinite alternate;
-        }
-        @-webkit-keyframes pulsate {
-            from {
-                -webkit-box-shadow: 0 0 10px rgba(255,255,255,0);
-                box-shadow        : 0 0 10px rgba(255,255,255,0);
-            }
-
-            to {
-                -webkit-box-shadow: 0 0 20px rgba(255,255,255,1);
-                box-shadow        : 0 0 20px rgba(255,255,255,1);
-            }
+            box-shadow: 0 0 30px whitesmoke;
+            -animation: pulsate 1s infinite alternate;
         }
         @keyframes pulsate {
             from {
-                -webkit-box-shadow: 0 0 10px rgba(255,255,255,0);
-                box-shadow        : 0 0 10px rgba(255,255,255,0);
+                box-shadow: 0 0 10px rgba(255,255,255,0);
             }
 
             to {
-                -webkit-box-shadow: 0 0 20px rgba(255,255,255,1);
-                box-shadow        : 0 0 20px rgba(255,255,255,1);
+                box-shadow: 0 0 20px rgba(255,255,255,1);
             }
         }
     }

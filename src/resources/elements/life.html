@@ -2,6 +2,7 @@
     <canvas id="life"
             width="750"
             height="464"
+            click.delegate="addCell($event)"
             mouseenter.trigger="slowDown()"
             mouseleave.trigger="fullSpeed()">
     </canvas>

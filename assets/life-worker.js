@@ -54,6 +54,10 @@ var conway = {
         return cells;
     },
 
+    addCells: function (newCells) {
+        conway.liveCells = newCells;
+    },
+
     // Set all neighbours to zero
     zeroNeighbours: function () {
         const count = conway.numberCells;
@@ -130,6 +134,9 @@ onmessage = function (e) {
         switch (message) {
             case 'initialize':
                 conway.ignite(data.w, data.h, data.liferules);
+                break;
+            case 'addCells':
+                conway.addCells(data.cells);
                 break;
             case 'resume':
                 conway.bugLifeStep();

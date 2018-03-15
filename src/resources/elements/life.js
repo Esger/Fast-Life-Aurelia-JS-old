@@ -25,7 +25,6 @@ export class LifeCustomElement {
         this.cellCounts = [];
         this.lastMean = 0;
         this.stableCountDown = 20;
-        this.gridSize = 8;
         this.grid = false;
     }
 
@@ -93,25 +92,30 @@ export class LifeCustomElement {
         }
     }
 
+    addCell(event) {
+        let mouseX = (event.offsetX) ? event.offsetX : (event.pageX - this.offsetLeft);
+        let realX = Math.floor(mouseX / this.cellSize);
+        let mouseY = (event.offsetY) ? event.offsetY : (event.pageY - this.offsetTop);
+        let realY = Math.floor(mouseY / this.cellSize);
+        console.log(realX, realY);
+    }
+
     drawgrid(onScreen) {
         const offScreen = this.ctxOffscreen;
-        const cellSize = this.cellSize;
-        const gridSize = Math.max(this.gridSize, 2) * cellSize;
+        const cellSize = Math.max(this.cellSize, 4);
         offScreen.lineWidth = 1;
-        offScreen.strokeStyle = "#c2c2c2";
-        let y = gridSize;
-        for (; y < this.canvas.height; y += gridSize) {
+        offScreen.strokeStyle = "#f2f2f2";
+        let xy = cellSize;
+        for (; xy < this.canvas.width; xy += cellSize) {
             offScreen.beginPath();
-            offScreen.moveTo(0, y - 0.5);
-            offScreen.lineTo(this.canvas.width, y - 0.5);
+            offScreen.moveTo(0, xy - 0.5);
+            offScreen.lineTo(this.canvas.width, xy - 0.5);
             offScreen.stroke();
             offScreen.closePath();
-        }
-        let x = gridSize;
-        for (; x < this.canvas.width; x += gridSize) {
+
             offScreen.beginPath();
-            offScreen.moveTo(x - 0.5, 0);
-            offScreen.lineTo(x - 0.5, this.canvas.height);
+            offScreen.moveTo(xy - 0.5, 0);
+            offScreen.lineTo(xy - 0.5, this.canvas.height);
             offScreen.stroke();
             offScreen.closePath();
         }
@@ -194,9 +198,6 @@ export class LifeCustomElement {
         this.ea.subscribe('cellSize', response => {
             this.cellSize = response;
             this.initLife();
-        });
-        this.ea.subscribe('gridSize', response => {
-            this.gridSize = response;
         });
         this.ea.subscribe('lifeRules', response => {
             this.liferules = response.liferules;

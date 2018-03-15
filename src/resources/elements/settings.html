@@ -50,22 +50,6 @@
                    checked.bind="trails"
                    change.delegate="toggleTrails()" />
             <label for="trails"> Trails</label>
-
-        </life-rules>
-    </tab-content>
-
-    <tab-content class="lifeRules">
-        <row-labels>
-            <p title="Change grid size and toggle">Grid size</p>
-        </row-labels>
-        <life-rules>
-            <input type="range"
-                   title="grid size ${gridSize}"
-                   min.one-time="minGridSize"
-                   max.one-time="maxGridSize"
-                   value.bind="gridSizeExp"
-                   change.delegate="setGridSize()">
-            <output value.bind="gridSize"></output>
             <input id="grid"
                    type="checkbox"
                    checked.bind="grid"

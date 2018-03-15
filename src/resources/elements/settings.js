@@ -39,23 +39,16 @@ export class SettingsCustomElement {
             { rule: "235678/3678", name: "Stains" },
             { rule: "2345/45678", name: "Walled Cities" },
         ];
+        this.grid = false;
         this.trails = true;
         this.cellSizeExp = 1;
         this.minCellSize = 0;
         this.maxCellSize = 5;
-        this.grid = false;
-        this.gridSizeExp = 3;
-        this.minGridSize = 2;
-        this.maxGridSize = 5;
         this.setPreset();
     }
 
     get cellSize() {
         return Math.pow(2, this.cellSizeExp);
-    }
-
-    get gridSize() {
-        return Math.pow(2, this.gridSizeExp);
     }
 
     toggleTrails() {
@@ -68,10 +61,6 @@ export class SettingsCustomElement {
 
     setCellSize() {
         this.ea.publish('cellSize', this.cellSize);
-    }
-
-    setGridSize() {
-        this.ea.publish('gridSize', this.gridSize);
     }
 
     setPreset() {

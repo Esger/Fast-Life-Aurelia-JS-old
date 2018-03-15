@@ -249,21 +249,19 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         LifeCustomElement.prototype.drawgrid = function drawgrid(onScreen) {
             var offScreen = this.ctxOffscreen;
             var cellSize = Math.max(this.cellSize, 4);
-            offScreen.lineWidth = 1;
-            offScreen.strokeStyle = "#f2f2f2";
-            var xy = cellSize;
-            for (; xy < this.canvas.width; xy += cellSize) {
-                offScreen.beginPath();
-                offScreen.moveTo(0, xy - 0.5);
-                offScreen.lineTo(this.canvas.width, xy - 0.5);
-                offScreen.stroke();
-                offScreen.closePath();
-
-                offScreen.beginPath();
-                offScreen.moveTo(xy - 0.5, 0);
-                offScreen.lineTo(xy - 0.5, this.canvas.height);
-                offScreen.stroke();
-                offScreen.closePath();
+            var margin = 4;
+            var maxX = this.canvas.width - cellSize;
+            var maxY = this.canvas.height - cellSize;
+            var step = cellSize * 2;
+            offScreen.fillStyle = "#f2f2f2";
+            var y = margin;
+            var oddStep = 0;
+            for (; y < maxY; y += cellSize) {
+                var x = margin + oddStep;
+                oddStep = (oddStep + cellSize) % step;
+                for (; x < maxX; x += step) {
+                    offScreen.fillRect(x, y, cellSize, cellSize);
+                }
             }
             if (onScreen) {
                 this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);

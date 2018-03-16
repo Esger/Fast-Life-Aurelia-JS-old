@@ -31,14 +31,6 @@ var conway = {
         conway.sendScreen();
     },
 
-    // Put new pair of values in array
-    celXY: function (x, y) {
-        return {
-            x: x,
-            y: y
-        };
-    },
-
     // Fill liveCells with random cellxy's
     fillRandom: function () {
         let cells = [];
@@ -47,15 +39,15 @@ var conway = {
             let x = 0;
             for (; x < conway.spaceWidth; x += 1) {
                 if (Math.random() < conway.fillRatio) {
-                    cells.push(conway.celXY(x, y));
+                    cells.push([x, y]);
                 }
             }
         }
         return cells;
     },
 
-    addCells: function (newCells) {
-        conway.liveCells = newCells;
+    addCell: function (newCell) {
+        conway.liveCells.push(newCell);
     },
 
     // Set all neighbours to zero
@@ -77,8 +69,8 @@ var conway = {
 
         let i = 0;
         for (; i < count; i += 1) {
-            let thisx = conway.liveCells[i].x;
-            let thisy = conway.liveCells[i].y;
+            let thisx = conway.liveCells[i][0];
+            let thisy = conway.liveCells[i][1];
             let dy = -rowLength;
             for (; dy <= rowLength; dy += rowLength) {
                 let yEff = thisy * rowLength + dy;
@@ -103,7 +95,7 @@ var conway = {
                 let y = Math.floor(i / rowLength);
                 let x = i % rowLength;
                 // let x = i - (y * rowLength);
-                conway.liveCells.push(conway.celXY(x, y));
+                conway.liveCells.push([x, y]);
             }
         }
     },
@@ -135,8 +127,8 @@ onmessage = function (e) {
             case 'initialize':
                 conway.ignite(data.w, data.h, data.liferules);
                 break;
-            case 'addCells':
-                conway.addCells(data.cells);
+            case 'addCell':
+                conway.addCell(data.cell);
                 break;
             case 'resume':
                 conway.bugLifeStep();

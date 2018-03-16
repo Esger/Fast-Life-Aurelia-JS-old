@@ -83,7 +83,7 @@ export class LifeCustomElement {
             let i = cells.length - 1;
             while (i >= 0) {
                 let cell = cells[i]; i -= 1;
-                offScreen.fillRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize);
+                offScreen.fillRect(cell[0] * cellSize, cell[1] * cellSize, cellSize, cellSize);
             }
 
             this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
@@ -97,6 +97,9 @@ export class LifeCustomElement {
         let realX = Math.floor(mouseX / this.cellSize);
         let mouseY = (event.offsetY) ? event.offsetY : (event.pageY - this.offsetTop);
         let realY = Math.floor(mouseY / this.cellSize);
+        this.ctx.fillStyle = "#d4d4d4";
+        this.ctx.fillRect(realX * this.cellSize, realY * this.cellSize, this.cellSize, this.cellSize);
+        this.lfWs.addCell([realX, realY]);
         console.log(realX, realY);
     }
 
@@ -181,6 +184,9 @@ export class LifeCustomElement {
             this.start();
         });
         this.ea.subscribe('step', () => {
+            this.drawCells();
+        });
+        this.ea.subscribeOnce('dataReady', () => {
             this.drawCells();
         });
         this.ea.subscribe('toggleTrails', () => {

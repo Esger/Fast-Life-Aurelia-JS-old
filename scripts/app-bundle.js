@@ -229,7 +229,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
                 var i = cells.length - 1;
                 while (i >= 0) {
                     var cell = cells[i];i -= 1;
-                    offScreen.fillRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize);
+                    offScreen.fillRect(cell[0] * cellSize, cell[1] * cellSize, cellSize, cellSize);
                 }
 
                 this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
@@ -243,6 +243,9 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             var realX = Math.floor(mouseX / this.cellSize);
             var mouseY = event.offsetY ? event.offsetY : event.pageY - this.offsetTop;
             var realY = Math.floor(mouseY / this.cellSize);
+            this.ctx.fillStyle = "#d4d4d4";
+            this.ctx.fillRect(realX * this.cellSize, realY * this.cellSize, this.cellSize, this.cellSize);
+            this.lfWs.addCell([realX, realY]);
             console.log(realX, realY);
         };
 
@@ -333,6 +336,9 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
                 _this3.start();
             });
             this.ea.subscribe('step', function () {
+                _this3.drawCells();
+            });
+            this.ea.subscribeOnce('dataReady', function () {
                 _this3.drawCells();
             });
             this.ea.subscribe('toggleTrails', function () {
@@ -550,7 +556,6 @@ define('resources/elements/stats',['exports', 'aurelia-framework', 'aurelia-even
 
             this.ea = eventAggregator;
             this.speed = 0;
-            this.stackSize = 0;
             this.cellCount = 0;
             this.generations = 0;
         }
@@ -562,7 +567,6 @@ define('resources/elements/stats',['exports', 'aurelia-framework', 'aurelia-even
                 _this.cellCount = response.cellCount;
                 _this.generations = response.generations;
                 _this.speed = response.speed;
-                _this.stackSize = response.stackSize;
             });
         };
 
@@ -687,9 +691,10 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             this.wrkr = new Worker('./assets/life-worker.js');
             this.fillSlotPointer = 0;
             this.wrkr.onmessage = function (e) {
-                if (e.data && e.data.message == 'newGeneration') {
+                if (e.data && e.data.cells.length) {
                     _this._roundStack[_this.fillSlotPointer] = e.data.cells;
                     _this.fillSlotPointer = (_this.fillSlotPointer + 1) % _this._roundStack.length;
+                    _this.ea.publish('dataReady');
                 }
             };
             this._roundStack = this.emptyStack.slice();
@@ -714,7 +719,15 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             this.wrkr.postMessage(workerData);
         };
 
-        LifeWorkerService.prototype.getBatch = function getBatch(cells) {
+        LifeWorkerService.prototype.addCell = function addCell(xy) {
+            var workerData = {
+                message: 'addCell',
+                cell: xy
+            };
+            this.wrkr.postMessage(workerData);
+        };
+
+        LifeWorkerService.prototype.getGeneration = function getGeneration() {
             var workerData = {
                 message: 'resume'
             };
@@ -731,16 +744,11 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
                 if (this.started) {
                     var emptySlotPointer = pointer == 0 ? this.maxIndex : pointer - 1;
                     setTimeout(function () {
-                        _this2.getBatch();
+                        _this2.getGeneration();
                     });
                 }
                 this.started = true;
                 return this._roundStack[pointer];
-            }
-        }, {
-            key: 'stackSize',
-            get: function get() {
-                return this._roundStack.length;
             }
         }]);
 
@@ -753,6 +761,6 @@ define('text!resources/elements/life.html', ['module'], function(module) { modul
 define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <require from=\"resources/elements/controls\"></require>\n    <require from=\"resources/elements/tabs\"></require>\n    <h1>Fast Life | AureliaJS<a href=\"/\">ashWare</a></h1>\n    <life></life>\n    <controls></controls>\n    <tabs></tabs>\n</template>"; });
 define('text!resources/elements/settings.html', ['module'], function(module) { module.exports = "<template>\n\n    <tab-content class=\"lifeRules\">\n        <row-labels>\n            <p title=\"Preset life rules\">Presets</p>\n        </row-labels>\n        <life-rules>\n            <select change.delegate=\"setPreset()\"\n                    value.bind=\"selectedPreset\"> \n                <option repeat.for=\"preset of presets\"  \n                    model.bind=\"$index\" \n                    innerhtml.one-time=\"preset.name\"> \n                </option> \n            </select>\n        </life-rules>\n    </tab-content>\n\n    <tab-content class=\"lifeRules\">\n        <row-labels>\n            <p title=\"Neighbour count to stay alive\">New</p>\n            <p title=\"Neighbour count to come alive\">Stay</p>\n        </row-labels>\n        <life-rules>\n            <life-rule repeat.for=\"rule of liferules\"\n                       if.bind=\"$index !== 9\">\n                <input type=\"checkbox\"\n                       checked.bind=\"rule\"\n                       id.one-time=\"'rule_'+$index\"\n                       change.delegate=\"setRules($index)\">\n                <label for.one-time=\"'rule_'+$index\">${$index % 10}</label>\n            </life-rule>\n        </life-rules>\n    </tab-content>\n\n    <tab-content class=\"lifeRules\">\n        <row-labels>\n            <p title=\"Change cell size and toggle trails\">Cell size</p>\n        </row-labels>\n        <life-rules>\n            <input type=\"range\"\n                   title=\"cell size ${cellSize}\"\n                   min.one-time=\"minCellSize\"\n                   max.one-time=\"maxCellSize\"\n                   value.bind=\"cellSizeExp\"\n                   change.delegate=\"setCellSize()\"\n                   focus.delegate=\"stop()\">\n            <output value.bind=\"cellSize\"></output>\n            <input id=\"trails\"\n                   type=\"checkbox\"\n                   checked.bind=\"trails\"\n                   change.delegate=\"toggleTrails()\" />\n            <label for=\"trails\"> Trails</label>\n            <input id=\"grid\"\n                   type=\"checkbox\"\n                   checked.bind=\"grid\"\n                   change.delegate=\"toggleGrid()\" />\n            <label for=\"grid\"> Grid</label>\n\n        </life-rules>\n    </tab-content>\n\n</template>"; });
 define('text!resources/elements/stats.html', ['module'], function(module) { module.exports = "<template>\n    <p>generations: ${generations} | cells: ${cellCount} | ${speed} gen/s</p>\n</template>"; });
-define('text!resources/elements/story.html', ['module'], function(module) { module.exports = "<template>\n    <h2>Pushing Aurelia JS to speed</h2>\n    <p>Conway's Game Of Life has been a vehicle to learn new things to me for many years; here I&rsquo;m experimenting to see if Aurelia can match a <a href=\"/graylife\"\n           target=\"_blank\">Vanilla js version</a> &mdash; It does. Take look at <a href=\"https://nl.wikipedia.org/wiki/Game_of_Life\"\n           target=\"_blank\">this wikipedia page for a description of GOL</a></p>\n    <p>The modular nature of Aurelia invited me to enhance the UI / layout as well.</p>\n    <h2>Features</h2>\n    <ul>\n        <li>Easy buttons to experiment with the rules</li>\n        <li>Rule presets that sync with your own settings if there&rsquo;s a match</li>\n        <li>Optional &lsquo;trails&rsquo; to smooth things out</li>\n        <li>Slow life when hovering over the canvas</li>\n        <li>Web-worker for computing of life generations</li>\n        <li>Heavy computing stos automatically when Life get's stable</li>\n    </ul>\n    <p>Don't hesitate to check out my other games and projects at <a href=\"/\"\n           target=\"_blank\">ashWare.nl</a></p>\n</template>"; });
+define('text!resources/elements/story.html', ['module'], function(module) { module.exports = "<template>\n    <h2>Pushing Aurelia JS to speed</h2>\n    <p>Conway's Game Of Life has been a vehicle to learn new things to me for many years; here I&rsquo;m experimenting to see if Aurelia can match a <a href=\"/graylife\"\n           target=\"_blank\">Vanilla js version</a> &mdash; It does. Take look at <a href=\"https://nl.wikipedia.org/wiki/Game_of_Life\"\n           target=\"_blank\">this wikipedia page for a description of GOL</a></p>\n    <p>The modular nature of Aurelia invited me to enhance the UI / layout as well.</p>\n    <h2>Features</h2>\n    <ul>\n        <li>Easy buttons to experiment with the rules</li>\n        <li>Rule presets that sync with your own settings if there&rsquo;s a match</li>\n        <li>Optional &lsquo;trails&rsquo; to smooth things out</li>\n        <li>Slow life when hovering over the canvas</li>\n        <li>Grid for drawing life cells more precisely</li>\n        <li>Web-worker for computing of life generations</li>\n        <li>Heavy computing stos automatically when Life get's stable</li>\n    </ul>\n    <p>Don't hesitate to check out my other games and projects at <a href=\"/\"\n           target=\"_blank\">ashWare.nl</a></p>\n</template>"; });
 define('text!resources/elements/tabs.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/settings\"></require>\n    <require from=\"resources/elements/story\"></require>\n    <tab-buttons>\n        <tab-button repeat.for=\"tab of tabs\"\n                    click.delegate=\"activateTab($index)\"\n                    class.bind=\"tab.active ? 'active' : ''\">${tab.title}</tab-button>\n    </tab-buttons>\n    <tab-contents>\n        <settings if.bind=\"tabs[0].active\"></settings>\n        <story if.bind=\"tabs[1].active\"></story>\n    </tab-contents>\n</template>"; });
 //# sourceMappingURL=app-bundle.js.map

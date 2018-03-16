@@ -25,14 +25,10 @@ export class LifeWorkerService {
         this.getSlotPointer = (this.getSlotPointer + 1) % this._roundStack.length;
         if (this.started) {
             let emptySlotPointer = (pointer == 0) ? this.maxIndex : pointer - 1;
-            setTimeout(() => { this.getBatch(); });
+            setTimeout(() => { this.getGeneration(); });
         }
         this.started = true;
         return this._roundStack[pointer];
-    }
-
-    get stackSize() {
-        return this._roundStack.length;
     }
 
     init(w, h, liferules) {
@@ -42,9 +38,10 @@ export class LifeWorkerService {
         this.wrkr = new Worker('./assets/life-worker.js');
         this.fillSlotPointer = 0;
         this.wrkr.onmessage = (e) => {
-            if (e.data && e.data.message == 'newGeneration') {
+            if (e.data && e.data.cells.length) {
                 this._roundStack[this.fillSlotPointer] = e.data.cells;
                 this.fillSlotPointer = (this.fillSlotPointer + 1) % this._roundStack.length;
+                this.ea.publish('dataReady');
             }
         };
         this._roundStack = this.emptyStack.slice();
@@ -69,7 +66,15 @@ export class LifeWorkerService {
         this.wrkr.postMessage(workerData);
     }
 
-    getBatch(cells) {
+    addCell(xy) {
+        let workerData = {
+            message: 'addCell',
+            cell: xy
+        };
+        this.wrkr.postMessage(workerData);
+    }
+
+    getGeneration() {
         let workerData = {
             message: 'resume'
         };

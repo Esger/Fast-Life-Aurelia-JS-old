@@ -110,7 +110,7 @@ export class LifeCustomElement {
         const maxX = this.canvas.width - cellSize;
         const maxY = this.canvas.height - cellSize;
         const step = cellSize * 2;
-        offScreen.fillStyle = "#f2f2f2";
+        offScreen.fillStyle = "rgba(128, 128, 128, 0.1)";
         let y = margin;
         let oddStep = 0;
         for (; y < maxY; y += cellSize) {
@@ -185,6 +185,9 @@ export class LifeCustomElement {
         });
         this.ea.subscribe('step', () => {
             this.drawCells();
+        });
+        this.ea.subscribe('timeoutInterval', response => {
+            this.speedInterval = response;
         });
         this.ea.subscribeOnce('dataReady', () => {
             this.drawCells();

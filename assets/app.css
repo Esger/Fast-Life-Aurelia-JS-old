@@ -143,8 +143,11 @@ controls life-controls a {
   margin-right: 2px;
   background-color: transparent;
 }
-controls life-controls [class*=button] {
+controls life-controls [class*='button'] {
   margin-right: 10px;
+}
+controls life-controls [type='range'] {
+  margin: 0;
 }
 controls life-controls .clearbutton {
   width: 20px;

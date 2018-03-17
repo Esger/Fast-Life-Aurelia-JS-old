@@ -97,6 +97,7 @@ define('resources/elements/controls',['exports', 'aurelia-framework', 'aurelia-e
             this.ea = eventAggregator;
             this.startPulsor = true;
             this.clearPulsor = false;
+            this.timeOut = 0;
             this.addListeners();
         }
 
@@ -118,6 +119,10 @@ define('resources/elements/controls',['exports', 'aurelia-framework', 'aurelia-e
         ControlsCustomElement.prototype.start = function start() {
             this.ea.publish('start');
             this.startPulsor = false;
+        };
+
+        ControlsCustomElement.prototype.setTimeoutInterval = function setTimeoutInterval() {
+            this.ea.publish('timeoutInterval', this.timeOut);
         };
 
         ControlsCustomElement.prototype.addListeners = function addListeners() {
@@ -256,7 +261,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             var maxX = this.canvas.width - cellSize;
             var maxY = this.canvas.height - cellSize;
             var step = cellSize * 2;
-            offScreen.fillStyle = "#f2f2f2";
+            offScreen.fillStyle = "rgba(128, 128, 128, 0.1)";
             var y = margin;
             var oddStep = 0;
             for (; y < maxY; y += cellSize) {
@@ -337,6 +342,9 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             });
             this.ea.subscribe('step', function () {
                 _this3.drawCells();
+            });
+            this.ea.subscribe('timeoutInterval', function (response) {
+                _this3.speedInterval = response;
             });
             this.ea.subscribeOnce('dataReady', function () {
                 _this3.drawCells();
@@ -756,7 +764,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
     }()) || _class);
 });
 define('text!app.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/main\"></require>\n    <main></main>\n</template>"; });
-define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/stats\"></require>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           class.bind=\"clearPulsor ? 'pulsor' : ''\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           class.bind=\"startPulsor ? 'pulsor' : ''\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n    </life-controls>\n    <stats></stats>\n</template>"; });
+define('text!resources/elements/controls.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/stats\"></require>\n    <life-controls>\n        <a href=\"#\"\n           class=\"clearbutton\"\n           class.bind=\"clearPulsor ? 'pulsor' : ''\"\n           title=\"Clear\"\n           click.delegate=\"clear()\"></a>\n        <a href=\"#\"\n           class=\"stopbutton\"\n           title=\"Stop\"\n           click.delegate=\"stop()\"></a>\n        <a href=\"#\"\n           class=\"stepbutton\"\n           title=\"Step\"\n           click.delegate=\"step()\"></a>\n        <a href=\"#\"\n           class=\"startbutton\"\n           class.bind=\"startPulsor ? 'pulsor' : ''\"\n           title=\"Start\"\n           click.delegate=\"start()\"></a>\n        <input type=\"range\"\n               min.one-time=\"0\"\n               max.one-time=\"500\"\n               step=\"50\"\n               value.bind=\"timeOut\"\n               change.delegate=\"setTimeoutInterval()\">\n        <output value.bind=\"'interval: ' + timeOut\"></output>\n\n    </life-controls>\n    <stats></stats>\n</template>"; });
 define('text!resources/elements/life.html', ['module'], function(module) { module.exports = "<template>\n    <canvas id=\"life\"\n            width=\"750\"\n            height=\"464\"\n            click.delegate=\"addCell($event)\"\n            mouseenter.trigger=\"slowDown()\"\n            mouseleave.trigger=\"fullSpeed()\">\n    </canvas>\n</template>"; });
 define('text!resources/elements/main.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"resources/elements/life\"></require>\n    <require from=\"resources/elements/controls\"></require>\n    <require from=\"resources/elements/tabs\"></require>\n    <h1>Fast Life | AureliaJS<a href=\"/\">ashWare</a></h1>\n    <life></life>\n    <controls></controls>\n    <tabs></tabs>\n</template>"; });
 define('text!resources/elements/settings.html', ['module'], function(module) { module.exports = "<template>\n\n    <tab-content class=\"lifeRules\">\n        <row-labels>\n            <p title=\"Preset life rules\">Presets</p>\n        </row-labels>\n        <life-rules>\n            <select change.delegate=\"setPreset()\"\n                    value.bind=\"selectedPreset\"> \n                <option repeat.for=\"preset of presets\"  \n                    model.bind=\"$index\" \n                    innerhtml.one-time=\"preset.name\"> \n                </option> \n            </select>\n        </life-rules>\n    </tab-content>\n\n    <tab-content class=\"lifeRules\">\n        <row-labels>\n            <p title=\"Neighbour count to stay alive\">New</p>\n            <p title=\"Neighbour count to come alive\">Stay</p>\n        </row-labels>\n        <life-rules>\n            <life-rule repeat.for=\"rule of liferules\"\n                       if.bind=\"$index !== 9\">\n                <input type=\"checkbox\"\n                       checked.bind=\"rule\"\n                       id.one-time=\"'rule_'+$index\"\n                       change.delegate=\"setRules($index)\">\n                <label for.one-time=\"'rule_'+$index\">${$index % 10}</label>\n            </life-rule>\n        </life-rules>\n    </tab-content>\n\n    <tab-content class=\"lifeRules\">\n        <row-labels>\n            <p title=\"Change cell size and toggle trails\">Cell size</p>\n        </row-labels>\n        <life-rules>\n            <input type=\"range\"\n                   title=\"cell size ${cellSize}\"\n                   min.one-time=\"minCellSize\"\n                   max.one-time=\"maxCellSize\"\n                   value.bind=\"cellSizeExp\"\n                   change.delegate=\"setCellSize()\"\n                   focus.delegate=\"stop()\">\n            <output value.bind=\"cellSize\"></output>\n            <input id=\"trails\"\n                   type=\"checkbox\"\n                   checked.bind=\"trails\"\n                   change.delegate=\"toggleTrails()\" />\n            <label for=\"trails\"> Trails</label>\n            <input id=\"grid\"\n                   type=\"checkbox\"\n                   checked.bind=\"grid\"\n                   change.delegate=\"toggleGrid()\" />\n            <label for=\"grid\"> Grid</label>\n\n        </life-rules>\n    </tab-content>\n\n</template>"; });

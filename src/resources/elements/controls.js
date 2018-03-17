@@ -12,6 +12,7 @@ export class ControlsCustomElement {
         this.ea = eventAggregator;
         this.startPulsor = true;
         this.clearPulsor = false;
+        this.timeOut = 0;
         this.addListeners();
     }
 
@@ -33,6 +34,10 @@ export class ControlsCustomElement {
     start() {
         this.ea.publish('start');
         this.startPulsor = false;
+    }
+
+    setTimeoutInterval() {
+        this.ea.publish('timeoutInterval', this.timeOut);
     }
 
     addListeners() {

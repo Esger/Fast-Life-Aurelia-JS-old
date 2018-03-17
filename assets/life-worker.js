@@ -31,7 +31,6 @@ var conway = {
         conway.sendScreen();
     },
 
-    // Fill liveCells with random cellxy's
     fillRandom: function () {
         let cells = [];
         let y = 0;
@@ -50,7 +49,10 @@ var conway = {
         conway.liveCells.push(newCell);
     },
 
-    // Set all neighbours to zero
+    setCells: function (cells) {
+        conway.liveCells = cells;
+    },
+
     zeroNeighbours: function () {
         const count = conway.numberCells;
 
@@ -108,7 +110,6 @@ var conway = {
         postMessage(workerData);
     },
 
-    // Animation function
     bugLifeStep: function () {
         conway.zeroNeighbours();
         conway.updateNeighbours();
@@ -130,11 +131,17 @@ onmessage = function (e) {
             case 'addCell':
                 conway.addCell(data.cell);
                 break;
+            case 'setCells':
+                conway.setCells(data.cells);
+                break;
             case 'resume':
                 conway.bugLifeStep();
                 break;
             case 'rules':
                 conway.liferules = data.rules;
+                break;
+            case 'clear':
+                conway.fillZero();
                 break;
             default:
         }

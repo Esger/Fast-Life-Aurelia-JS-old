@@ -58,10 +58,32 @@ export class LifeWorkerService {
         });
     }
 
+    stop() {
+        this.clear();
+        this.resetCurrentCells();
+    }
+
+    clear() {
+        let workerData = {
+            message: 'clear',
+        };
+        this.wrkr.postMessage(workerData);
+    }
+
     changeRules(rules) {
         let workerData = {
             message: 'rules',
             rules: rules
+        };
+        this.wrkr.postMessage(workerData);
+    }
+
+    resetCurrentCells() {
+        let pointer = (this.getSlotPointer > 0) ? this.getSlotPointer - 1 : this.maxIndex;
+        let cells = this._roundStack[pointer];
+        let workerData = {
+            message: 'setCells',
+            cells: cells
         };
         this.wrkr.postMessage(workerData);
     }

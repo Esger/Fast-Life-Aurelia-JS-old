@@ -279,6 +279,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         LifeCustomElement.prototype.initLife = function initLife() {
             var _this2 = this;
 
+            this.stop();
             this.opacity = 1 - this.trails * 0.9;
             this.canvas = document.getElementById('life');
             this.ctx = this.canvas.getContext('2d');
@@ -294,7 +295,6 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.lifeSteps = 0;
             this.prevSteps = 0;
             this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
-            this.stop();
             this.statusUpdateHandle = setInterval(function () {
                 _this2.showStats();
             }, 500);
@@ -313,6 +313,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.stop();
             this.initLife();
             this.clearSpace();
+            this.lfWs.clear();
         };
 
         LifeCustomElement.prototype.stop = function stop() {
@@ -361,6 +362,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             });
             this.ea.subscribe('cellSize', function (response) {
                 _this3.cellSize = response;
+
                 _this3.initLife();
             });
             this.ea.subscribe('lifeRules', function (response) {

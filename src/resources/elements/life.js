@@ -93,6 +93,10 @@ export class LifeCustomElement {
         }
     }
 
+    redraw() {
+
+    }
+
     addCell(event) {
         let mouseX = (event.offsetX) ? event.offsetX : (event.pageX - this.offsetLeft);
         let realX = Math.floor(mouseX / this.cellSize);
@@ -132,17 +136,23 @@ export class LifeCustomElement {
         this.ctx = this.canvas.getContext('2d');
         this.canvasWidth = this.canvas.width;
         this.canvasHeight = this.canvas.height;
-        this.spaceWidth = Math.floor(this.canvasWidth / this.cellSize);
-        this.spaceHeight = Math.floor(this.canvasHeight / this.cellSize);
-
         this.offScreenCanvas = document.createElement('canvas');
         this.offScreenCanvas.width = this.canvasWidth;
         this.offScreenCanvas.height = this.canvasHeight;
         this.ctxOffscreen = this.offScreenCanvas.getContext('2d');
+        this.setSpaceSize();
+        this.resetSteps();
+        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
+    }
+
+    setSpaceSize() {
+        this.spaceWidth = Math.floor(this.canvasWidth / this.cellSize);
+        this.spaceHeight = Math.floor(this.canvasHeight / this.cellSize);
+    }
+
+    resetSteps() {
         this.lifeSteps = 0; // Number of iterations / steps done
         this.prevSteps = 0;
-        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
-        this.statusUpdateHandle = setInterval(() => { this.showStats(); }, 500);
     }
 
     slowDown() {
@@ -156,23 +166,22 @@ export class LifeCustomElement {
     clear() {
         this.stop();
         this.clearSpace();
-        this.initLife();
+        this.resetSteps();
         this.lfWs.clear();
     }
 
     stop() {
-        // todo run till stack is through (10) stack.length times!
         this.running = false;
         if (this.statusUpdateHandle) {
             clearInterval(this.statusUpdateHandle);
             this.statusUpdateHandle = null;
         }
-        this.lfWs.stop();
     }
 
     start() {
         this.running = true;
         this.animateStep();
+        this.statusUpdateHandle = setInterval(() => { this.showStats(); }, 500);
     }
 
     addListeners() {
@@ -186,6 +195,9 @@ export class LifeCustomElement {
             this.start();
         });
         this.ea.subscribe('step', () => {
+            this.lfWs.fillRandom();
+        });
+        this.ea.subscribe('fillRandom', () => {
             this.drawCells();
         });
         this.ea.subscribe('timeoutInterval', response => {
@@ -207,8 +219,9 @@ export class LifeCustomElement {
         this.ea.subscribe('cellSize', response => {
             this.cellSize = response;
             // todo no re-init; chop off superfluous
-            this.stop();
-            this.initLife();
+            this.setSpaceSize();
+            this.lfWs.resize(this.spaceWidth, this.spaceHeight);
+            this.drawCells();
         });
         this.ea.subscribe('lifeRules', response => {
             this.liferules = response.liferules;

@@ -19,16 +19,18 @@ var conway = {
         return flatCells;
     },
 
-    ignite: function (w, h, liferules) {
+    init: function (w, h, liferules) {
+        conway.setSize(w, h);
+        conway.liferules = liferules;
+        conway.neighbours = conway.fillZero();
+    },
+
+    setSize: function (w, h) {
         conway.spaceWidth = w;
         conway.spaceHeight = h;
-        conway.liferules = liferules;
         conway.numberCells = conway.spaceWidth * conway.spaceHeight;
         conway.startnumberLivecells = conway.numberCells * conway.fillRatio;
         conway.cellsAlive = conway.startnumberLivecells;
-        conway.neighbours = conway.fillZero();
-        conway.liveCells = conway.fillRandom();
-        conway.sendScreen('randomGeneration');
     },
 
     fillRandom: function () {
@@ -110,7 +112,7 @@ var conway = {
         postMessage(workerData);
     },
 
-    bugLifeStep: function () {
+    step: function () {
         conway.zeroNeighbours();
         conway.updateNeighbours();
         conway.evalNeighbours();
@@ -126,22 +128,32 @@ onmessage = function (e) {
         let data = e.data;
         switch (message) {
             case 'initialize':
-                conway.ignite(data.w, data.h, data.liferules);
+                conway.init(data.w, data.h, data.liferules);
+                conway.liveCells = conway.fillRandom();
+                conway.sendScreen('randomGeneration');
+                break;
+            case 'setSize':
+                conway.setSize(data.w, data.h);
                 break;
             case 'addCell':
                 conway.addCell(data.cell);
+                break;
+            case 'fillRandom':
+                conway.liveCells = conway.fillRandom();
+                conway.sendScreen('randomGeneration');
                 break;
             case 'setCells':
                 conway.setCells(data.cells);
                 break;
             case 'resume':
-                conway.bugLifeStep();
+                conway.step();
                 break;
             case 'rules':
                 conway.liferules = data.rules;
                 break;
             case 'clear':
-                conway.fillZero();
+                conway.liveCells = [];
+                conway.neighbours = conway.fillZero();
                 break;
             default:
         }

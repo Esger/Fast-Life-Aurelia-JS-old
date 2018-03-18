@@ -13,38 +13,34 @@ export class LifeWorkerService {
     constructor(eventAggregator) {
         this.ea = eventAggregator;
 
-        this.emptyStack = [[], [], [], [], [], [], [], [], [], []];
-        this._roundStack = this.emptyStack.slice();
-        this.fillSlotPointer = 0;
-        this.maxIndex = 9;
-        this.started = false;
+        this._emptyStack = [[], [], [], [], [], [], [], [], [], []];
+        this._roundStack = this._emptyStack.slice();
+        this._fillSlotIndex = 0;
+        this._getSlotIndex = 0;
+        this._maxIndex = 9;
+        this._stackReady = false;
     }
 
     get cells() {
-        let pointer = this.getSlotPointer;
-        this.getSlotPointer = (this.getSlotPointer + 1) % this._roundStack.length;
-        if (this.started) {
-            let emptySlotPointer = (pointer == 0) ? this.maxIndex : pointer - 1;
-            setTimeout(() => { this.getGeneration(); });
-        }
-        this.started = true;
-        return this._roundStack[pointer];
+        this.fillStack();
+        let i = this._getSlotIndex;
+        this._getSlotIndex = (this._getSlotIndex + 1) % this._roundStack.length;
+        setTimeout(() => { this.getGeneration(); });
+        return this._roundStack[i];
     }
 
     init(w, h, liferules) {
-        if (this.wrkr) {
-            this.wrkr.terminate();
-        }
         this.wrkr = new Worker('./assets/life-worker.js');
-        this.fillSlotPointer = 0;
+        this._fillSlotIndex = 0;
         this.wrkr.onmessage = (e) => {
+            // receive cells array and store it in the stack at the previous generation
             if (e.data && e.data.cells.length) {
-                this._roundStack[this.fillSlotPointer] = e.data.cells;
-                this.fillSlotPointer = (this.fillSlotPointer + 1) % this._roundStack.length;
+                this._roundStack[this._fillSlotIndex] = e.data.cells;
+                this._fillSlotIndex = (this._fillSlotIndex + 1) % this._roundStack.length;
                 this.ea.publish('dataReady');
             }
         };
-        this._roundStack = this.emptyStack.slice();
+        this._roundStack = this._emptyStack.slice();
         let workerData = {
             message: 'initialize',
             w: w,
@@ -52,15 +48,27 @@ export class LifeWorkerService {
             liferules: liferules
         };
         this.wrkr.postMessage(workerData);
-        this.getSlotPointer = 0;
-        this._roundStack.forEach(slot => {
-            this.wrkr.postMessage({ message: 'resume' });
-        });
+        this._getSlotIndex = 0;
+        this.fillStack();
+    }
+
+    fillStack() {
+        if (!this._stackReady) {
+            for (let i = 0; i < this._roundStack.length - 2; i++) {
+                this.getGeneration();
+            }
+            this._stackReady = true;
+        }
     }
 
     stop() {
-        this.clear();
-        this.resetCurrentCells();
+        this._stackReady = false;
+        let cells = this._roundStack[this._getSlotIndex];
+        let workerData = {
+            message: 'setCells',
+            cells: cells
+        };
+        this.wrkr.postMessage(workerData);
     }
 
     clear() {
@@ -74,16 +82,6 @@ export class LifeWorkerService {
         let workerData = {
             message: 'rules',
             rules: rules
-        };
-        this.wrkr.postMessage(workerData);
-    }
-
-    resetCurrentCells() {
-        let pointer = (this.getSlotPointer > 0) ? this.getSlotPointer - 1 : this.maxIndex;
-        let cells = this._roundStack[pointer];
-        let workerData = {
-            message: 'setCells',
-            cells: cells
         };
         this.wrkr.postMessage(workerData);
     }

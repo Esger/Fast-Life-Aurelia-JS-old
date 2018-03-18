@@ -29,6 +29,7 @@ export class LifeCustomElement {
     }
 
     showStats() {
+        // todo use performance.now()
         let speed = this.lifeSteps - this.prevSteps;
         this.prevSteps = this.lifeSteps;
         this.ea.publish('stats', {
@@ -126,7 +127,6 @@ export class LifeCustomElement {
     }
 
     initLife() {
-        this.stop();
         this.opacity = 1 - this.trails * 0.9;
         this.canvas = document.getElementById('life');
         this.ctx = this.canvas.getContext('2d');
@@ -154,10 +154,9 @@ export class LifeCustomElement {
     }
 
     clear() {
-        this.running = false;
         this.stop();
-        this.initLife();
         this.clearSpace();
+        this.initLife();
         this.lfWs.clear();
     }
 
@@ -168,6 +167,7 @@ export class LifeCustomElement {
             clearInterval(this.statusUpdateHandle);
             this.statusUpdateHandle = null;
         }
+        this.lfWs.stop();
     }
 
     start() {
@@ -207,11 +207,13 @@ export class LifeCustomElement {
         this.ea.subscribe('cellSize', response => {
             this.cellSize = response;
             // todo no re-init; chop off superfluous
+            this.stop();
             this.initLife();
         });
         this.ea.subscribe('lifeRules', response => {
             this.liferules = response.liferules;
             if (response.init) {
+                // this.stop();
                 this.initLife();
             } else {
                 this.lfWs.changeRules(this.liferules);

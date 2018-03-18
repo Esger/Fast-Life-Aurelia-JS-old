@@ -279,7 +279,6 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         LifeCustomElement.prototype.initLife = function initLife() {
             var _this2 = this;
 
-            this.stop();
             this.opacity = 1 - this.trails * 0.9;
             this.canvas = document.getElementById('life');
             this.ctx = this.canvas.getContext('2d');
@@ -309,10 +308,9 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         };
 
         LifeCustomElement.prototype.clear = function clear() {
-            this.running = false;
             this.stop();
-            this.initLife();
             this.clearSpace();
+            this.initLife();
             this.lfWs.clear();
         };
 
@@ -322,6 +320,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
                 clearInterval(this.statusUpdateHandle);
                 this.statusUpdateHandle = null;
             }
+            this.lfWs.stop();
         };
 
         LifeCustomElement.prototype.start = function start() {
@@ -363,6 +362,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.ea.subscribe('cellSize', function (response) {
                 _this3.cellSize = response;
 
+                _this3.stop();
                 _this3.initLife();
             });
             this.ea.subscribe('lifeRules', function (response) {
@@ -685,29 +685,27 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
 
             this.ea = eventAggregator;
 
-            this.emptyStack = [[], [], [], [], [], [], [], [], [], []];
-            this._roundStack = this.emptyStack.slice();
-            this.fillSlotPointer = 0;
-            this.maxIndex = 9;
-            this.started = false;
+            this._emptyStack = [[], [], [], [], [], [], [], [], [], []];
+            this._roundStack = this._emptyStack.slice();
+            this._fillSlotIndex = 0;
+            this._getSlotIndex = 0;
+            this._maxIndex = 9;
+            this._stackReady = false;
         }
 
         LifeWorkerService.prototype.init = function init(w, h, liferules) {
             var _this = this;
 
-            if (this.wrkr) {
-                this.wrkr.terminate();
-            }
             this.wrkr = new Worker('./assets/life-worker.js');
-            this.fillSlotPointer = 0;
+            this._fillSlotIndex = 0;
             this.wrkr.onmessage = function (e) {
                 if (e.data && e.data.cells.length) {
-                    _this._roundStack[_this.fillSlotPointer] = e.data.cells;
-                    _this.fillSlotPointer = (_this.fillSlotPointer + 1) % _this._roundStack.length;
+                    _this._roundStack[_this._fillSlotIndex] = e.data.cells;
+                    _this._fillSlotIndex = (_this._fillSlotIndex + 1) % _this._roundStack.length;
                     _this.ea.publish('dataReady');
                 }
             };
-            this._roundStack = this.emptyStack.slice();
+            this._roundStack = this._emptyStack.slice();
             var workerData = {
                 message: 'initialize',
                 w: w,
@@ -715,15 +713,27 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
                 liferules: liferules
             };
             this.wrkr.postMessage(workerData);
-            this.getSlotPointer = 0;
-            this._roundStack.forEach(function (slot) {
-                _this.wrkr.postMessage({ message: 'resume' });
-            });
+            this._getSlotIndex = 0;
+            this.fillStack();
+        };
+
+        LifeWorkerService.prototype.fillStack = function fillStack() {
+            if (!this._stackReady) {
+                for (var i = 0; i < this._roundStack.length - 2; i++) {
+                    this.getGeneration();
+                }
+                this._stackReady = true;
+            }
         };
 
         LifeWorkerService.prototype.stop = function stop() {
-            this.clear();
-            this.resetCurrentCells();
+            this._stackReady = false;
+            var cells = this._roundStack[this._getSlotIndex];
+            var workerData = {
+                message: 'setCells',
+                cells: cells
+            };
+            this.wrkr.postMessage(workerData);
         };
 
         LifeWorkerService.prototype.clear = function clear() {
@@ -737,16 +747,6 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             var workerData = {
                 message: 'rules',
                 rules: rules
-            };
-            this.wrkr.postMessage(workerData);
-        };
-
-        LifeWorkerService.prototype.resetCurrentCells = function resetCurrentCells() {
-            var pointer = this.getSlotPointer > 0 ? this.getSlotPointer - 1 : this.maxIndex;
-            var cells = this._roundStack[pointer];
-            var workerData = {
-                message: 'setCells',
-                cells: cells
             };
             this.wrkr.postMessage(workerData);
         };
@@ -771,16 +771,13 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             get: function get() {
                 var _this2 = this;
 
-                var pointer = this.getSlotPointer;
-                this.getSlotPointer = (this.getSlotPointer + 1) % this._roundStack.length;
-                if (this.started) {
-                    var emptySlotPointer = pointer == 0 ? this.maxIndex : pointer - 1;
-                    setTimeout(function () {
-                        _this2.getGeneration();
-                    });
-                }
-                this.started = true;
-                return this._roundStack[pointer];
+                this.fillStack();
+                var i = this._getSlotIndex;
+                this._getSlotIndex = (this._getSlotIndex + 1) % this._roundStack.length;
+                setTimeout(function () {
+                    _this2.getGeneration();
+                });
+                return this._roundStack[i];
             }
         }]);
 

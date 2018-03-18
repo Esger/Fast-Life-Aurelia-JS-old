@@ -28,7 +28,7 @@ var conway = {
         conway.cellsAlive = conway.startnumberLivecells;
         conway.neighbours = conway.fillZero();
         conway.liveCells = conway.fillRandom();
-        conway.sendScreen();
+        conway.sendScreen('randomGeneration');
     },
 
     fillRandom: function () {
@@ -102,9 +102,9 @@ var conway = {
         }
     },
 
-    sendScreen: function () {
+    sendScreen: function (message) {
         let workerData = {
-            message: 'newGeneration',
+            message: message,
             cells: conway.liveCells
         };
         postMessage(workerData);
@@ -114,7 +114,7 @@ var conway = {
         conway.zeroNeighbours();
         conway.updateNeighbours();
         conway.evalNeighbours();
-        conway.sendScreen();
+        conway.sendScreen('newGeneration');
         conway.lifeSteps += 1;
     }
 

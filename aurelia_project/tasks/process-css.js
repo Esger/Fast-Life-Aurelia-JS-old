@@ -9,14 +9,10 @@ import { build } from 'aurelia-cli';
 
 export default function processCSS() {
 
-    let processors = [
-        autoprefixer({ browsers: ['last 2 versions'] })
-    ];
-
     return gulp.src(project.cssProcessor.source)
         .pipe(plumber({ errorHandler: notify.onError('Error: <%= error.message %>') }))
         .pipe(sourcemaps.init())
         .pipe(concat('app.less'))
         .pipe(less())
         .pipe(gulp.dest('assets/'));
-}   
+}

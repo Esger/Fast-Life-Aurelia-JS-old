@@ -134,6 +134,7 @@ onmessage = function (e) {
                 break;
             case 'setSize':
                 conway.setSize(data.w, data.h);
+                conway.sendScreen('randomGeneration');
                 break;
             case 'addCell':
                 conway.addCell(data.cell);

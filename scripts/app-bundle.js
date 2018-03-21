@@ -257,6 +257,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.ctx.fillStyle = "#d4d4d4";
             this.ctx.fillRect(realX * this.cellSize, realY * this.cellSize, this.cellSize, this.cellSize);
             this.lfWs.addCell([realX, realY]);
+            this.subscribeOnFirstData();
             console.log(realX, realY);
         };
 
@@ -364,13 +365,11 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             });
             this.ea.subscribe('fillRandom', function () {
                 _this4.lfWs.fillRandom();
-                _this4.drawCells();
                 _this4.subscribeOnFirstData();
             });
             this.ea.subscribe('timeoutInterval', function (response) {
                 _this4.speedInterval = response;
             });
-            this.subscribeOnFirstData();
             this.ea.subscribe('toggleTrails', function () {
                 _this4.trails = !_this4.trails;
                 _this4.opacity = 1 - _this4.trails * 0.9;
@@ -386,7 +385,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
 
                 _this4.setSpaceSize();
                 _this4.lfWs.resize(_this4.spaceWidth, _this4.spaceHeight);
-                _this4.drawCells();
+                _this4.subscribeOnFirstData();
             });
             this.ea.subscribe('lifeRules', function (response) {
                 _this4.liferules = response.liferules;
@@ -396,6 +395,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
                     _this4.lfWs.changeRules(_this4.liferules);
                 }
             });
+            this.subscribeOnFirstData();
         };
 
         LifeCustomElement.prototype.attached = function attached() {
@@ -716,6 +716,8 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
 
         LifeWorkerService.prototype.emptyBuffer = function emptyBuffer() {
             this._buffer = this._emptyBuffer.slice();
+            this._fillSlotIndex = 0;
+            this._getSlotIndex = 0;
         };
 
         LifeWorkerService.prototype.init = function init(w, h, liferules) {
@@ -750,12 +752,11 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             this._buffer[0] = this._buffer[0].filter(inArea);
             this._buffer[1] = this._buffer[1].filter(inArea);
             var workerData = {
-                message: 'resize',
+                message: 'setSize',
                 w: w,
                 h: h
             };
             this.wrkr.postMessage(workerData);
-            this.addCell();
         };
 
         LifeWorkerService.prototype.clear = function clear() {
@@ -767,6 +768,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         };
 
         LifeWorkerService.prototype.fillRandom = function fillRandom() {
+            this.clear();
             var workerData = {
                 message: 'fillRandom'
             };

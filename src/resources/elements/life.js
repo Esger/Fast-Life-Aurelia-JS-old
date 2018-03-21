@@ -103,6 +103,7 @@ export class LifeCustomElement {
         this.ctx.fillStyle = "#d4d4d4";
         this.ctx.fillRect(realX * this.cellSize, realY * this.cellSize, this.cellSize, this.cellSize);
         this.lfWs.addCell([realX, realY]);
+        this.subscribeOnFirstData();
         console.log(realX, realY);
     }
 
@@ -202,13 +203,11 @@ export class LifeCustomElement {
         });
         this.ea.subscribe('fillRandom', () => {
             this.lfWs.fillRandom();
-            this.drawCells();
             this.subscribeOnFirstData();
         });
         this.ea.subscribe('timeoutInterval', response => {
             this.speedInterval = response;
         });
-        this.subscribeOnFirstData();
         this.ea.subscribe('toggleTrails', () => {
             this.trails = !this.trails;
             this.opacity = 1 - this.trails * 0.9;
@@ -224,7 +223,7 @@ export class LifeCustomElement {
             // todo no re-init; chop off superfluous
             this.setSpaceSize();
             this.lfWs.resize(this.spaceWidth, this.spaceHeight);
-            this.drawCells();
+            this.subscribeOnFirstData();
         });
         this.ea.subscribe('lifeRules', response => {
             this.liferules = response.liferules;
@@ -235,6 +234,7 @@ export class LifeCustomElement {
                 this.lfWs.changeRules(this.liferules);
             }
         });
+        this.subscribeOnFirstData();
     }
 
     attached() {

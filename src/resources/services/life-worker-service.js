@@ -28,6 +28,8 @@ export class LifeWorkerService {
 
     emptyBuffer() {
         this._buffer = this._emptyBuffer.slice();
+        this._fillSlotIndex = 0;
+        this._getSlotIndex = 0;
     }
 
     init(w, h, liferules) {
@@ -61,12 +63,11 @@ export class LifeWorkerService {
         this._buffer[0] = this._buffer[0].filter(inArea);
         this._buffer[1] = this._buffer[1].filter(inArea);
         let workerData = {
-            message: 'resize',
+            message: 'setSize',
             w: w,
             h: h
         };
         this.wrkr.postMessage(workerData);
-        this.addCell();
     }
 
     clear() {
@@ -78,6 +79,7 @@ export class LifeWorkerService {
     }
 
     fillRandom() {
+        this.clear();
         let workerData = {
             message: 'fillRandom',
         };

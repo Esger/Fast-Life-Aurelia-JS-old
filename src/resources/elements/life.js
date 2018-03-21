@@ -42,6 +42,8 @@ export class LifeCustomElement {
     clearSpace() {
         this.ctx.fillStyle = "rgb(255, 255, 255)";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctxOffscreen.fillStyle = "rgb(255, 255, 255)";
+        this.ctxOffscreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
     get meanOver100Gens() {
@@ -93,15 +95,11 @@ export class LifeCustomElement {
         }
     }
 
-    redraw() {
-
-    }
-
     addCell(event) {
-        let mouseX = (event.offsetX) ? event.offsetX : (event.pageX - this.offsetLeft);
-        let realX = Math.floor(mouseX / this.cellSize);
-        let mouseY = (event.offsetY) ? event.offsetY : (event.pageY - this.offsetTop);
-        let realY = Math.floor(mouseY / this.cellSize);
+        const mouseX = (event.offsetX) ? event.offsetX : (event.pageX - this.offsetLeft);
+        const realX = Math.floor(mouseX / this.cellSize);
+        const mouseY = (event.offsetY) ? event.offsetY : (event.pageY - this.offsetTop);
+        const realY = Math.floor(mouseY / this.cellSize);
         this.ctx.fillStyle = "#d4d4d4";
         this.ctx.fillRect(realX * this.cellSize, realY * this.cellSize, this.cellSize, this.cellSize);
         this.lfWs.addCell([realX, realY]);
@@ -111,15 +109,14 @@ export class LifeCustomElement {
     drawgrid(onScreen) {
         const offScreen = this.ctxOffscreen;
         const cellSize = Math.max(this.cellSize, 4);
-        const margin = 4;
         const maxX = this.canvas.width - cellSize;
         const maxY = this.canvas.height - cellSize;
         const step = cellSize * 2;
         offScreen.fillStyle = "rgba(128, 128, 128, 0.1)";
-        let y = margin;
+        let y = 0;
         let oddStep = 0;
         for (; y < maxY; y += cellSize) {
-            let x = margin + oddStep;
+            let x = oddStep;
             oddStep = (oddStep + cellSize) % step;
             for (; x < maxX; x += step) {
                 offScreen.fillRect(x, y, cellSize, cellSize);
@@ -184,6 +181,12 @@ export class LifeCustomElement {
         this.statusUpdateHandle = setInterval(() => { this.showStats(); }, 500);
     }
 
+    subscribeOnFirstData() {
+        this.ea.subscribeOnce('dataReady', () => {
+            this.drawCells();
+        });
+    }
+
     addListeners() {
         this.ea.subscribe('clear', () => {
             this.clear();
@@ -195,17 +198,17 @@ export class LifeCustomElement {
             this.start();
         });
         this.ea.subscribe('step', () => {
-            this.lfWs.fillRandom();
+            this.drawCells();
         });
         this.ea.subscribe('fillRandom', () => {
+            this.lfWs.fillRandom();
             this.drawCells();
+            this.subscribeOnFirstData();
         });
         this.ea.subscribe('timeoutInterval', response => {
             this.speedInterval = response;
         });
-        this.ea.subscribeOnce('dataReady', () => {
-            this.drawCells();
-        });
+        this.subscribeOnFirstData();
         this.ea.subscribe('toggleTrails', () => {
             this.trails = !this.trails;
             this.opacity = 1 - this.trails * 0.9;
@@ -237,6 +240,5 @@ export class LifeCustomElement {
     attached() {
         this.addListeners();
     }
-
 
 }

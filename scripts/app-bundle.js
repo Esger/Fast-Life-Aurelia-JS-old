@@ -208,6 +208,8 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         LifeCustomElement.prototype.clearSpace = function clearSpace() {
             this.ctx.fillStyle = "rgb(255, 255, 255)";
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctxOffscreen.fillStyle = "rgb(255, 255, 255)";
+            this.ctxOffscreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
         };
 
         LifeCustomElement.prototype.animateStep = function animateStep() {
@@ -247,8 +249,6 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             }
         };
 
-        LifeCustomElement.prototype.redraw = function redraw() {};
-
         LifeCustomElement.prototype.addCell = function addCell(event) {
             var mouseX = event.offsetX ? event.offsetX : event.pageX - this.offsetLeft;
             var realX = Math.floor(mouseX / this.cellSize);
@@ -263,15 +263,14 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         LifeCustomElement.prototype.drawgrid = function drawgrid(onScreen) {
             var offScreen = this.ctxOffscreen;
             var cellSize = Math.max(this.cellSize, 4);
-            var margin = 4;
             var maxX = this.canvas.width - cellSize;
             var maxY = this.canvas.height - cellSize;
             var step = cellSize * 2;
             offScreen.fillStyle = "rgba(128, 128, 128, 0.1)";
-            var y = margin;
+            var y = 0;
             var oddStep = 0;
             for (; y < maxY; y += cellSize) {
-                var x = margin + oddStep;
+                var x = oddStep;
                 oddStep = (oddStep + cellSize) % step;
                 for (; x < maxX; x += step) {
                     offScreen.fillRect(x, y, cellSize, cellSize);
@@ -340,53 +339,61 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             }, 500);
         };
 
-        LifeCustomElement.prototype.addListeners = function addListeners() {
+        LifeCustomElement.prototype.subscribeOnFirstData = function subscribeOnFirstData() {
             var _this3 = this;
 
-            this.ea.subscribe('clear', function () {
-                _this3.clear();
-            });
-            this.ea.subscribe('stop', function () {
-                _this3.stop();
-            });
-            this.ea.subscribe('start', function () {
-                _this3.start();
-            });
-            this.ea.subscribe('step', function () {
-                _this3.lfWs.fillRandom();
-            });
-            this.ea.subscribe('fillRandom', function () {
-                _this3.drawCells();
-            });
-            this.ea.subscribe('timeoutInterval', function (response) {
-                _this3.speedInterval = response;
-            });
             this.ea.subscribeOnce('dataReady', function () {
                 _this3.drawCells();
             });
+        };
+
+        LifeCustomElement.prototype.addListeners = function addListeners() {
+            var _this4 = this;
+
+            this.ea.subscribe('clear', function () {
+                _this4.clear();
+            });
+            this.ea.subscribe('stop', function () {
+                _this4.stop();
+            });
+            this.ea.subscribe('start', function () {
+                _this4.start();
+            });
+            this.ea.subscribe('step', function () {
+                _this4.drawCells();
+            });
+            this.ea.subscribe('fillRandom', function () {
+                _this4.lfWs.fillRandom();
+                _this4.drawCells();
+                _this4.subscribeOnFirstData();
+            });
+            this.ea.subscribe('timeoutInterval', function (response) {
+                _this4.speedInterval = response;
+            });
+            this.subscribeOnFirstData();
             this.ea.subscribe('toggleTrails', function () {
-                _this3.trails = !_this3.trails;
-                _this3.opacity = 1 - _this3.trails * 0.9;
+                _this4.trails = !_this4.trails;
+                _this4.opacity = 1 - _this4.trails * 0.9;
             });
             this.ea.subscribe('toggleGrid', function () {
-                _this3.grid = !_this3.grid;
-                if (_this3.grid) {
-                    _this3.drawgrid(true);
+                _this4.grid = !_this4.grid;
+                if (_this4.grid) {
+                    _this4.drawgrid(true);
                 }
             });
             this.ea.subscribe('cellSize', function (response) {
-                _this3.cellSize = response;
+                _this4.cellSize = response;
 
-                _this3.setSpaceSize();
-                _this3.lfWs.resize(_this3.spaceWidth, _this3.spaceHeight);
-                _this3.drawCells();
+                _this4.setSpaceSize();
+                _this4.lfWs.resize(_this4.spaceWidth, _this4.spaceHeight);
+                _this4.drawCells();
             });
             this.ea.subscribe('lifeRules', function (response) {
-                _this3.liferules = response.liferules;
+                _this4.liferules = response.liferules;
                 if (response.init) {
-                    _this3.initLife();
+                    _this4.initLife();
                 } else {
-                    _this3.lfWs.changeRules(_this3.liferules);
+                    _this4.lfWs.changeRules(_this4.liferules);
                 }
             });
         };

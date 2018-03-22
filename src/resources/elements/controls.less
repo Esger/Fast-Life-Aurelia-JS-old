@@ -23,12 +23,16 @@ controls {
             margin: 0;
         }
 
-        .clearbutton {
+        .button() {
             width        : 20px;
             height       : 20px;
             border-radius: 2px;
-            box-sizing   : border-box;
-            border       : 2px solid #8a8a00;
+        }
+
+        .clearbutton {
+            .button;
+            box-sizing: border-box;
+            border    : 2px solid #8a8a00;
 
             &.pulsor::before {
                 content      : '';
@@ -76,9 +80,7 @@ controls {
         }
 
         .stopbutton {
-            width           : 20px;
-            height          : 20px;
-            border-radius   : 2px;
+            .button;
             box-sizing      : border-box;
             border          : 2px solid #8a8a00;
             background-color: #8a8a00;
@@ -98,6 +100,15 @@ controls {
 
             &:hover {
                 border-left-color: whitesmoke;
+            }
+        }
+
+        .randombutton {
+            .button;
+            background-image: url("random-button.svg");
+
+            &:hover {
+                background-position: -20px 0;
             }
         }
 

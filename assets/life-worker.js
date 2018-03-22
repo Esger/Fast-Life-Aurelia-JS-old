@@ -19,19 +19,20 @@ var conway = {
         return flatCells;
     },
 
-    ignite: function (w, h, liferules) {
+    init: function (w, h, liferules) {
+        conway.setSize(w, h);
+        conway.liferules = liferules;
+        conway.neighbours = conway.fillZero();
+    },
+
+    setSize: function (w, h) {
         conway.spaceWidth = w;
         conway.spaceHeight = h;
-        conway.liferules = liferules;
         conway.numberCells = conway.spaceWidth * conway.spaceHeight;
         conway.startnumberLivecells = conway.numberCells * conway.fillRatio;
         conway.cellsAlive = conway.startnumberLivecells;
-        conway.neighbours = conway.fillZero();
-        conway.liveCells = conway.fillRandom();
-        conway.sendScreen();
     },
 
-    // Fill liveCells with random cellxy's
     fillRandom: function () {
         let cells = [];
         let y = 0;
@@ -46,11 +47,10 @@ var conway = {
         return cells;
     },
 
-    addCell: function (newCell) {
-        conway.liveCells.push(newCell);
+    setCells: function (cells) {
+        conway.liveCells = cells;
     },
 
-    // Set all neighbours to zero
     zeroNeighbours: function () {
         const count = conway.numberCells;
 
@@ -100,20 +100,19 @@ var conway = {
         }
     },
 
-    sendScreen: function () {
+    sendScreen: function (message) {
         let workerData = {
-            message: 'newGeneration',
+            message: message,
             cells: conway.liveCells
         };
         postMessage(workerData);
     },
 
-    // Animation function
-    bugLifeStep: function () {
+    step: function () {
         conway.zeroNeighbours();
         conway.updateNeighbours();
         conway.evalNeighbours();
-        conway.sendScreen();
+        conway.sendScreen('generation');
         conway.lifeSteps += 1;
     }
 
@@ -125,16 +124,34 @@ onmessage = function (e) {
         let data = e.data;
         switch (message) {
             case 'initialize':
-                conway.ignite(data.w, data.h, data.liferules);
+                conway.init(data.w, data.h, data.liferules);
+                break;
+            case 'setSize':
+                conway.setSize(data.w, data.h);
+                conway.sendScreen('setSize');
                 break;
             case 'addCell':
                 conway.addCell(data.cell);
+                conway.sendScreen('addCell');
                 break;
-            case 'resume':
-                conway.bugLifeStep();
+            case 'fillRandom':
+                conway.liveCells = conway.fillRandom();
+                conway.sendScreen('fillRandom');
+                break;
+            case 'setCells':
+                conway.setCells(data.cells);
+                conway.sendScreen('setCells');
+                break;
+            case 'step':
+                conway.step();
                 break;
             case 'rules':
                 conway.liferules = data.rules;
+                break;
+            case 'clear':
+                conway.liveCells = [];
+                conway.neighbours = conway.fillZero();
+                conway.sendScreen('clear');
                 break;
             default:
         }

@@ -29,6 +29,7 @@ export class LifeCustomElement {
     }
 
     showStats() {
+        // todo use performance.now()
         let speed = this.lifeSteps - this.prevSteps;
         this.prevSteps = this.lifeSteps;
         this.ea.publish('stats', {
@@ -41,6 +42,8 @@ export class LifeCustomElement {
     clearSpace() {
         this.ctx.fillStyle = "rgb(255, 255, 255)";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctxOffscreen.fillStyle = "rgb(255, 255, 255)";
+        this.ctxOffscreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
     get meanOver100Gens() {
@@ -60,7 +63,7 @@ export class LifeCustomElement {
     }
 
     animateStep() {
-        this.drawCells();
+        this.drawCells(true);
         if (this.running && !this.stable) {
             setTimeout(() => { this.animateStep(); }, this.speedInterval);
         } else {
@@ -68,53 +71,38 @@ export class LifeCustomElement {
         }
     }
 
-    drawCells() {
+    drawCells(generate) {
+        if (generate) this.lfWs.getGeneration();
         let cells = this.lfWs.cells;
         const cellSize = this.cellSize;
         const offScreen = this.ctxOffscreen;
-        if (cells) {
-            offScreen.fillStyle = "rgba(255, 255, 255, " + this.opacity + ")";
-            offScreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            if (this.grid) {
-                this.drawgrid();
-            }
-
-            offScreen.fillStyle = "rgba(128, 128, 0, 1)";
-            let i = cells.length - 1;
-            while (i >= 0) {
-                let cell = cells[i]; i -= 1;
-                offScreen.fillRect(cell[0] * cellSize, cell[1] * cellSize, cellSize, cellSize);
-            }
-
-            this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
-            this.cellsAlive = cells.length;
-            this.lifeSteps += 1;
+        offScreen.fillStyle = "rgba(255, 255, 255, " + this.opacity + ")";
+        offScreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        if (this.grid) {
+            this.drawgrid();
         }
-    }
-
-    addCell(event) {
-        let mouseX = (event.offsetX) ? event.offsetX : (event.pageX - this.offsetLeft);
-        let realX = Math.floor(mouseX / this.cellSize);
-        let mouseY = (event.offsetY) ? event.offsetY : (event.pageY - this.offsetTop);
-        let realY = Math.floor(mouseY / this.cellSize);
-        this.ctx.fillStyle = "#d4d4d4";
-        this.ctx.fillRect(realX * this.cellSize, realY * this.cellSize, this.cellSize, this.cellSize);
-        this.lfWs.addCell([realX, realY]);
-        console.log(realX, realY);
+        offScreen.fillStyle = "rgba(128, 128, 0, 1)";
+        let i = cells.length - 1;
+        while (i >= 0) {
+            let cell = cells[i]; i -= 1;
+            offScreen.fillRect(cell[0] * cellSize, cell[1] * cellSize, cellSize, cellSize);
+        }
+        this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
+        this.cellsAlive = cells.length;
+        this.lifeSteps += 1;
     }
 
     drawgrid(onScreen) {
         const offScreen = this.ctxOffscreen;
         const cellSize = Math.max(this.cellSize, 4);
-        const margin = 4;
         const maxX = this.canvas.width - cellSize;
         const maxY = this.canvas.height - cellSize;
         const step = cellSize * 2;
         offScreen.fillStyle = "rgba(128, 128, 128, 0.1)";
-        let y = margin;
+        let y = 0;
         let oddStep = 0;
         for (; y < maxY; y += cellSize) {
-            let x = margin + oddStep;
+            let x = oddStep;
             oddStep = (oddStep + cellSize) % step;
             for (; x < maxX; x += step) {
                 offScreen.fillRect(x, y, cellSize, cellSize);
@@ -131,18 +119,25 @@ export class LifeCustomElement {
         this.ctx = this.canvas.getContext('2d');
         this.canvasWidth = this.canvas.width;
         this.canvasHeight = this.canvas.height;
-        this.spaceWidth = Math.floor(this.canvasWidth / this.cellSize);
-        this.spaceHeight = Math.floor(this.canvasHeight / this.cellSize);
-
         this.offScreenCanvas = document.createElement('canvas');
         this.offScreenCanvas.width = this.canvasWidth;
         this.offScreenCanvas.height = this.canvasHeight;
         this.ctxOffscreen = this.offScreenCanvas.getContext('2d');
+        this.setSpaceSize();
+        this.resetSteps();
+        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
+        this.subscribeOnFirstData();
+        this.lfWs.fillRandom();
+    }
+
+    setSpaceSize() {
+        this.spaceWidth = Math.floor(this.canvasWidth / this.cellSize);
+        this.spaceHeight = Math.floor(this.canvasHeight / this.cellSize);
+    }
+
+    resetSteps() {
         this.lifeSteps = 0; // Number of iterations / steps done
         this.prevSteps = 0;
-        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
-        this.stop();
-        this.statusUpdateHandle = setInterval(() => { this.showStats(); }, 500);
     }
 
     slowDown() {
@@ -154,10 +149,10 @@ export class LifeCustomElement {
     }
 
     clear() {
-        this.running = false;
         this.stop();
-        this.initLife();
-        this.clearSpace();
+        // this.clearSpace();
+        this.resetSteps();
+        this.lfWs.clear();
     }
 
     stop() {
@@ -171,11 +166,30 @@ export class LifeCustomElement {
     start() {
         this.running = true;
         this.animateStep();
+        this.statusUpdateHandle = setInterval(() => { this.showStats(); }, 500);
+    }
+
+    subscribeOnFirstData() {
+        this.ea.subscribeOnce('dataReady', () => {
+            this.drawCells();
+        });
+    }
+
+    addCell(event) {
+        const mouseX = (event.offsetX) ? event.offsetX : (event.pageX - this.offsetLeft);
+        const realX = Math.floor(mouseX / this.cellSize);
+        const mouseY = (event.offsetY) ? event.offsetY : (event.pageY - this.offsetTop);
+        const realY = Math.floor(mouseY / this.cellSize);
+        this.ctx.fillStyle = "#d4d4d4";
+        this.ctx.fillRect(realX * this.cellSize, realY * this.cellSize, this.cellSize, this.cellSize);
+        this.subscribeOnFirstData();
+        this.lfWs.addCell([realX, realY]);
     }
 
     addListeners() {
         this.ea.subscribe('clear', () => {
             this.clear();
+            this.subscribeOnFirstData();
         });
         this.ea.subscribe('stop', () => {
             this.stop();
@@ -184,13 +198,15 @@ export class LifeCustomElement {
             this.start();
         });
         this.ea.subscribe('step', () => {
-            this.drawCells();
+            this.lfWs.getGeneration();
+            this.subscribeOnFirstData();
+        });
+        this.ea.subscribe('fillRandom', () => {
+            this.lfWs.fillRandom();
+            this.subscribeOnFirstData();
         });
         this.ea.subscribe('timeoutInterval', response => {
             this.speedInterval = response;
-        });
-        this.ea.subscribeOnce('dataReady', () => {
-            this.drawCells();
         });
         this.ea.subscribe('toggleTrails', () => {
             this.trails = !this.trails;
@@ -204,11 +220,15 @@ export class LifeCustomElement {
         });
         this.ea.subscribe('cellSize', response => {
             this.cellSize = response;
-            this.initLife();
+            // todo no re-init; chop off superfluous
+            this.setSpaceSize();
+            this.lfWs.resize(this.spaceWidth, this.spaceHeight);
+            this.subscribeOnFirstData();
         });
         this.ea.subscribe('lifeRules', response => {
             this.liferules = response.liferules;
             if (response.init) {
+                // this.stop();
                 this.initLife();
             } else {
                 this.lfWs.changeRules(this.liferules);
@@ -219,6 +239,5 @@ export class LifeCustomElement {
     attached() {
         this.addListeners();
     }
-
 
 }

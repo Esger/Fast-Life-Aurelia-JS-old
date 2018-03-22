@@ -36,6 +36,10 @@ export class ControlsCustomElement {
         this.startPulsor = false;
     }
 
+    fillRandom() {
+        this.ea.publish('fillRandom');
+    }
+
     setTimeoutInterval() {
         this.ea.publish('timeoutInterval', this.timeOut);
     }

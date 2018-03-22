@@ -152,12 +152,15 @@ controls life-controls .clearbutton.pulsor::before {
 controls life-controls .clearbutton:hover {
   border-color: whitesmoke;
 }
-controls life-controls .startbutton {
+controls life-controls .startbutton,
+controls life-controls .startnstopbutton {
   position: relative;
   width: 33px;
 }
 controls life-controls .startbutton::after,
-controls life-controls .startbutton::before {
+controls life-controls .startnstopbutton::after,
+controls life-controls .startbutton::before,
+controls life-controls .startnstopbutton::before {
   content: '';
   display: block;
   position: absolute;
@@ -169,13 +172,29 @@ controls life-controls .startbutton::before {
   border-width: 10px 0 10px 17.3px;
   border-color: transparent transparent transparent #8a8a00;
 }
-controls life-controls .startbutton::after {
+controls life-controls .startbutton::after,
+controls life-controls .startnstopbutton::after {
   right: 0;
   left: auto;
 }
 controls life-controls .startbutton:hover::after,
-controls life-controls .startbutton:hover::before {
+controls life-controls .startnstopbutton:hover::after,
+controls life-controls .startbutton:hover::before,
+controls life-controls .startnstopbutton:hover::before {
   border-left-color: whitesmoke;
+}
+controls life-controls .startnstopbutton {
+  display: flex;
+  justify-content: flex-end;
+  width: 31px;
+}
+controls life-controls .startnstopbutton span {
+  flex: 0 0 2px;
+  content: '';
+  background-color: #8a8a00;
+}
+controls life-controls .startnstopbutton:hover span {
+  background-color: whitesmoke;
 }
 controls life-controls .stopbutton {
   width: 20px;
@@ -215,7 +234,7 @@ controls life-controls .pulsor:not(:hover),
 controls life-controls .pulsor:not(:hover)::after,
 controls life-controls .pulsor:not(:hover)::before {
   box-shadow: 0 0 30px whitesmoke;
-  -animation: pulsate 1s infinite alternate;
+  animation: pulsate .3s infinite alternate;
 }
 @keyframes pulsate {
   from {

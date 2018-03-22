@@ -125,26 +125,24 @@ onmessage = function (e) {
         switch (message) {
             case 'initialize':
                 conway.init(data.w, data.h, data.liferules);
-                conway.liveCells = conway.fillRandom();
-                conway.sendScreen('state');
                 break;
             case 'setSize':
                 conway.setSize(data.w, data.h);
-                conway.sendScreen('state');
+                conway.sendScreen('setSize');
                 break;
             case 'addCell':
                 conway.addCell(data.cell);
-                conway.sendScreen('state');
+                conway.sendScreen('addCell');
                 break;
             case 'fillRandom':
                 conway.liveCells = conway.fillRandom();
-                conway.sendScreen('state');
+                conway.sendScreen('fillRandom');
                 break;
             case 'setCells':
                 conway.setCells(data.cells);
-                conway.sendScreen('state');
+                conway.sendScreen('setCells');
                 break;
-            case 'resume':
+            case 'step':
                 conway.step();
                 break;
             case 'rules':
@@ -153,7 +151,7 @@ onmessage = function (e) {
             case 'clear':
                 conway.liveCells = [];
                 conway.neighbours = conway.fillZero();
-                conway.sendScreen('state');
+                conway.sendScreen('clear');
                 break;
             default:
         }

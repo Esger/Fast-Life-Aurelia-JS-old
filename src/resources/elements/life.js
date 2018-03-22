@@ -62,10 +62,10 @@ export class LifeCustomElement {
         return this.stableCountDown <= 0;
     }
 
-    animateStep() {
+    animateStep(checkStable) {
         this.drawCells(true);
-        if (this.running && !this.stable) {
-            setTimeout(() => { this.animateStep(); }, this.speedInterval);
+        if (this.running && (!this.stable && checkStable || !checkStable)) {
+            setTimeout(() => { this.animateStep(checkStable); }, this.speedInterval);
         } else {
             this.stop();
         }
@@ -141,11 +141,12 @@ export class LifeCustomElement {
     }
 
     slowDown() {
+        this.speedWas = this.speedInterval;
         this.speedInterval = 500;
     }
 
     fullSpeed() {
-        this.speedInterval = 0;
+        this.speedInterval = this.speedWas;
     }
 
     clear() {
@@ -165,7 +166,13 @@ export class LifeCustomElement {
 
     start() {
         this.running = true;
-        this.animateStep();
+        this.animateStep(false);
+        this.statusUpdateHandle = setInterval(() => { this.showStats(); }, 500);
+    }
+
+    startNstop() {
+        this.running = true;
+        this.animateStep(true); // true checks for stable life
         this.statusUpdateHandle = setInterval(() => { this.showStats(); }, 500);
     }
 
@@ -196,6 +203,9 @@ export class LifeCustomElement {
         });
         this.ea.subscribe('start', () => {
             this.start();
+        });
+        this.ea.subscribe('startNstop', () => {
+            this.startNstop();
         });
         this.ea.subscribe('step', () => {
             this.lfWs.getGeneration();

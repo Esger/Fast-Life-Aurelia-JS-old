@@ -36,6 +36,11 @@ export class ControlsCustomElement {
         this.startPulsor = false;
     }
 
+    startNstop() {
+        this.ea.publish('startNstop');
+        this.startPulsor = false;
+    }
+
     fillRandom() {
         this.ea.publish('fillRandom');
     }

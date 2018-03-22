@@ -49,7 +49,7 @@ controls {
             }
         }
 
-        .startbutton {
+        .startbutton, .startnstopbutton {
             position: relative;
             width   : 33px;
 
@@ -76,6 +76,24 @@ controls {
                     border-left-color: whitesmoke;
                 }
             }
+
+        }
+
+        .startnstopbutton {
+            display        : flex;
+            justify-content: flex-end;
+
+            span {
+                flex            : 0 0 2px;
+                content         : '';
+                background-color: #8a8a00;
+
+            }
+
+            &:hover span {
+                background-color: whitesmoke;
+            }
+            width          : 31px;
 
         }
 
@@ -118,7 +136,7 @@ controls {
 
         .pulsor:not(:hover), .pulsor:not(:hover)::after, .pulsor:not(:hover)::before {
             box-shadow: 0 0 30px whitesmoke;
-            -animation: pulsate 1s infinite alternate;
+            animation : pulsate .3s infinite alternate;
         }
         @keyframes pulsate {
             from {

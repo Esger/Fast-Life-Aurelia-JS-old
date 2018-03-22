@@ -225,7 +225,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             }
         };
 
-        LifeCustomElement.prototype.drawCells = function drawCells(buffer) {
+        LifeCustomElement.prototype.drawCells = function drawCells() {
             var cells = this.lfWs.cells;
             var cellSize = this.cellSize;
             var offScreen = this.ctxOffscreen;
@@ -329,7 +329,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             var _this3 = this;
 
             this.ea.subscribeOnce('dataReady', function () {
-                _this3.drawCells(0);
+                _this3.drawCells();
             });
         };
 

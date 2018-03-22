@@ -71,7 +71,7 @@ export class LifeCustomElement {
         }
     }
 
-    drawCells(buffer) {
+    drawCells() {
         let cells = this.lfWs.cells;
         const cellSize = this.cellSize;
         const offScreen = this.ctxOffscreen;
@@ -169,7 +169,7 @@ export class LifeCustomElement {
 
     subscribeOnFirstData() {
         this.ea.subscribeOnce('dataReady', () => {
-            this.drawCells(0);
+            this.drawCells();
         });
     }
 

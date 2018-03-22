@@ -225,40 +225,24 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             }
         };
 
-        LifeCustomElement.prototype.drawCells = function drawCells() {
+        LifeCustomElement.prototype.drawCells = function drawCells(buffer) {
             var cells = this.lfWs.cells;
             var cellSize = this.cellSize;
             var offScreen = this.ctxOffscreen;
-            if (cells) {
-                offScreen.fillStyle = "rgba(255, 255, 255, " + this.opacity + ")";
-                offScreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                if (this.grid) {
-                    this.drawgrid();
-                }
-
-                offScreen.fillStyle = "rgba(128, 128, 0, 1)";
-                var i = cells.length - 1;
-                while (i >= 0) {
-                    var cell = cells[i];i -= 1;
-                    offScreen.fillRect(cell[0] * cellSize, cell[1] * cellSize, cellSize, cellSize);
-                }
-
-                this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
-                this.cellsAlive = cells.length;
-                this.lifeSteps += 1;
+            offScreen.fillStyle = "rgba(255, 255, 255, " + this.opacity + ")";
+            offScreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            if (this.grid) {
+                this.drawgrid();
             }
-        };
-
-        LifeCustomElement.prototype.addCell = function addCell(event) {
-            var mouseX = event.offsetX ? event.offsetX : event.pageX - this.offsetLeft;
-            var realX = Math.floor(mouseX / this.cellSize);
-            var mouseY = event.offsetY ? event.offsetY : event.pageY - this.offsetTop;
-            var realY = Math.floor(mouseY / this.cellSize);
-            this.ctx.fillStyle = "#d4d4d4";
-            this.ctx.fillRect(realX * this.cellSize, realY * this.cellSize, this.cellSize, this.cellSize);
-            this.lfWs.addCell([realX, realY]);
-            this.subscribeOnFirstData();
-            console.log(realX, realY);
+            offScreen.fillStyle = "rgba(128, 128, 0, 1)";
+            var i = cells.length - 1;
+            while (i >= 0) {
+                var cell = cells[i];i -= 1;
+                offScreen.fillRect(cell[0] * cellSize, cell[1] * cellSize, cellSize, cellSize);
+            }
+            this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
+            this.cellsAlive = cells.length;
+            this.lifeSteps += 1;
         };
 
         LifeCustomElement.prototype.drawgrid = function drawgrid(onScreen) {
@@ -317,9 +301,10 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
 
         LifeCustomElement.prototype.clear = function clear() {
             this.stop();
-            this.clearSpace();
+
             this.resetSteps();
             this.lfWs.clear();
+            this.subscribeOnFirstData();
         };
 
         LifeCustomElement.prototype.stop = function stop() {
@@ -344,8 +329,19 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             var _this3 = this;
 
             this.ea.subscribeOnce('dataReady', function () {
-                _this3.drawCells();
+                _this3.drawCells(0);
             });
+        };
+
+        LifeCustomElement.prototype.addCell = function addCell(event) {
+            var mouseX = event.offsetX ? event.offsetX : event.pageX - this.offsetLeft;
+            var realX = Math.floor(mouseX / this.cellSize);
+            var mouseY = event.offsetY ? event.offsetY : event.pageY - this.offsetTop;
+            var realY = Math.floor(mouseY / this.cellSize);
+            this.ctx.fillStyle = "#d4d4d4";
+            this.ctx.fillRect(realX * this.cellSize, realY * this.cellSize, this.cellSize, this.cellSize);
+            this.subscribeOnFirstData();
+            this.lfWs.addCell([realX, realY]);
         };
 
         LifeCustomElement.prototype.addListeners = function addListeners() {
@@ -353,6 +349,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
 
             this.ea.subscribe('clear', function () {
                 _this4.clear();
+                _this4.subscribeOnFirstData();
             });
             this.ea.subscribe('stop', function () {
                 _this4.stop();
@@ -716,8 +713,6 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
 
         LifeWorkerService.prototype.emptyBuffer = function emptyBuffer() {
             this._buffer = this._emptyBuffer.slice();
-            this._fillSlotIndex = 0;
-            this._getSlotIndex = 0;
         };
 
         LifeWorkerService.prototype.init = function init(w, h, liferules) {
@@ -727,11 +722,9 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
             this._fillSlotIndex = 0;
             this.emptyBuffer();
             this.wrkr.onmessage = function (e) {
-                if (e.data && e.data.cells.length) {
-                    _this._buffer[_this._fillSlotIndex] = e.data.cells;
-                    _this._fillSlotIndex = 1 - _this._fillSlotIndex;
-                    _this.ea.publish('dataReady');
-                }
+                _this._buffer[_this._fillSlotIndex] = e.data.cells || [];
+                _this._fillSlotIndex = 1 - _this._fillSlotIndex;
+                _this.ea.publish('dataReady');
             };
             this._buffer = this._emptyBuffer.slice();
             var workerData = {
@@ -760,7 +753,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         };
 
         LifeWorkerService.prototype.clear = function clear() {
-            this.emptyBuffer();
+            this._buffer[this._fillSlotIndex] = [];
             var workerData = {
                 message: 'clear'
             };
@@ -784,19 +777,15 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         };
 
         LifeWorkerService.prototype.addCell = function addCell(xy) {
-            var cells = this._buffer[this._getSlotIndex];
+            var cells = this._buffer[this._fillSlotIndex];
+            if (xy) {
+                cells.push(xy);
+            }
             var workerData = {
                 message: 'setCells',
                 cells: cells
             };
             this.wrkr.postMessage(workerData);
-            if (xy) {
-                workerData = {
-                    message: 'addCell',
-                    cell: xy
-                };
-                this.wrkr.postMessage(workerData);
-            }
         };
 
         LifeWorkerService.prototype.getGeneration = function getGeneration() {

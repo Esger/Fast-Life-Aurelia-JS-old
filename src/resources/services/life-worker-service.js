@@ -28,8 +28,8 @@ export class LifeWorkerService {
 
     emptyBuffer() {
         this._buffer = this._emptyBuffer.slice();
-        this._fillSlotIndex = 0;
-        this._getSlotIndex = 0;
+        // this._fillSlotIndex = 0;
+        // this._getSlotIndex = 0;
     }
 
     init(w, h, liferules) {
@@ -38,11 +38,9 @@ export class LifeWorkerService {
         this.emptyBuffer();
         this.wrkr.onmessage = (e) => {
             // receive cells array and store it in the stack at the previous generation
-            if (e.data && e.data.cells.length) {
-                this._buffer[this._fillSlotIndex] = e.data.cells;
-                this._fillSlotIndex = 1 - this._fillSlotIndex;
-                this.ea.publish('dataReady');
-            }
+            this._buffer[this._fillSlotIndex] = e.data.cells || [];
+            this._fillSlotIndex = 1 - this._fillSlotIndex;
+            this.ea.publish('dataReady');
         };
         this._buffer = this._emptyBuffer.slice();
         let workerData = {
@@ -71,7 +69,8 @@ export class LifeWorkerService {
     }
 
     clear() {
-        this.emptyBuffer();
+        // this.emptyBuffer();
+        this._buffer[this._fillSlotIndex] = [];
         let workerData = {
             message: 'clear',
         };
@@ -95,19 +94,15 @@ export class LifeWorkerService {
     }
 
     addCell(xy) {
-        let cells = this._buffer[this._getSlotIndex];
+        let cells = this._buffer[this._fillSlotIndex];
+        if (xy) {
+            cells.push(xy);
+        }
         let workerData = {
             message: 'setCells',
             cells: cells
         };
         this.wrkr.postMessage(workerData);
-        if (xy) {
-            workerData = {
-                message: 'addCell',
-                cell: xy
-            };
-            this.wrkr.postMessage(workerData);
-        }
     }
 
     getGeneration() {

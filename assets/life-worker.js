@@ -47,10 +47,6 @@ var conway = {
         return cells;
     },
 
-    addCell: function (newCell) {
-        conway.liveCells.push(newCell);
-    },
-
     setCells: function (cells) {
         conway.liveCells = cells;
     },
@@ -116,7 +112,7 @@ var conway = {
         conway.zeroNeighbours();
         conway.updateNeighbours();
         conway.evalNeighbours();
-        conway.sendScreen('newGeneration');
+        conway.sendScreen('generation');
         conway.lifeSteps += 1;
     }
 
@@ -130,23 +126,23 @@ onmessage = function (e) {
             case 'initialize':
                 conway.init(data.w, data.h, data.liferules);
                 conway.liveCells = conway.fillRandom();
-                conway.sendScreen('randomGeneration');
+                conway.sendScreen('state');
                 break;
             case 'setSize':
                 conway.setSize(data.w, data.h);
-                conway.sendScreen('randomGeneration');
+                conway.sendScreen('state');
                 break;
             case 'addCell':
                 conway.addCell(data.cell);
-                conway.sendScreen('randomGeneration');
+                conway.sendScreen('state');
                 break;
             case 'fillRandom':
                 conway.liveCells = conway.fillRandom();
-                conway.sendScreen('randomGeneration');
+                conway.sendScreen('state');
                 break;
             case 'setCells':
                 conway.setCells(data.cells);
-                conway.sendScreen('randomGeneration');
+                conway.sendScreen('state');
                 break;
             case 'resume':
                 conway.step();
@@ -157,6 +153,7 @@ onmessage = function (e) {
             case 'clear':
                 conway.liveCells = [];
                 conway.neighbours = conway.fillZero();
+                conway.sendScreen('state');
                 break;
             default:
         }

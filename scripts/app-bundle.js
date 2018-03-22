@@ -215,7 +215,7 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
         LifeCustomElement.prototype.animateStep = function animateStep() {
             var _this = this;
 
-            this.drawCells();
+            this.drawCells(true);
             if (this.running && !this.stable) {
                 setTimeout(function () {
                     _this.animateStep();
@@ -225,7 +225,8 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             }
         };
 
-        LifeCustomElement.prototype.drawCells = function drawCells() {
+        LifeCustomElement.prototype.drawCells = function drawCells(generate) {
+            if (generate) this.lfWs.getGeneration();
             var cells = this.lfWs.cells;
             var cellSize = this.cellSize;
             var offScreen = this.ctxOffscreen;
@@ -279,6 +280,8 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
             this.setSpaceSize();
             this.resetSteps();
             this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
+            this.subscribeOnFirstData();
+            this.lfWs.fillRandom();
         };
 
         LifeCustomElement.prototype.setSpaceSize = function setSpaceSize() {
@@ -304,7 +307,6 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
 
             this.resetSteps();
             this.lfWs.clear();
-            this.subscribeOnFirstData();
         };
 
         LifeCustomElement.prototype.stop = function stop() {
@@ -358,7 +360,8 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
                 _this4.start();
             });
             this.ea.subscribe('step', function () {
-                _this4.drawCells();
+                _this4.lfWs.getGeneration();
+                _this4.subscribeOnFirstData();
             });
             this.ea.subscribe('fillRandom', function () {
                 _this4.lfWs.fillRandom();
@@ -392,7 +395,6 @@ define('resources/elements/life',['exports', 'aurelia-framework', 'aurelia-event
                     _this4.lfWs.changeRules(_this4.liferules);
                 }
             });
-            this.subscribeOnFirstData();
         };
 
         LifeCustomElement.prototype.attached = function attached() {
@@ -705,28 +707,21 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
 
             this.ea = eventAggregator;
 
-            this._emptyBuffer = [[], []];
+            this._buffer = [];
             this._fillSlotIndex = 0;
             this._getSlotIndex = 0;
             this._maxIndex = 9;
         }
 
-        LifeWorkerService.prototype.emptyBuffer = function emptyBuffer() {
-            this._buffer = this._emptyBuffer.slice();
-        };
-
         LifeWorkerService.prototype.init = function init(w, h, liferules) {
             var _this = this;
 
             this.wrkr = new Worker('./assets/life-worker.js');
-            this._fillSlotIndex = 0;
-            this.emptyBuffer();
+            this._buffer = [];
             this.wrkr.onmessage = function (e) {
-                _this._buffer[_this._fillSlotIndex] = e.data.cells || [];
-                _this._fillSlotIndex = 1 - _this._fillSlotIndex;
+                _this._buffer = e.data.cells || [];
                 _this.ea.publish('dataReady');
             };
-            this._buffer = this._emptyBuffer.slice();
             var workerData = {
                 message: 'initialize',
                 w: w,
@@ -734,16 +729,13 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
                 liferules: liferules
             };
             this.wrkr.postMessage(workerData);
-            this._getSlotIndex = 0;
-            this.getGeneration();
         };
 
         LifeWorkerService.prototype.resize = function resize(w, h) {
             var inArea = function inArea(cell) {
                 return cell[0] <= w && cell[1] <= h;
             };
-            this._buffer[0] = this._buffer[0].filter(inArea);
-            this._buffer[1] = this._buffer[1].filter(inArea);
+            this._buffer = this._buffer.filter(inArea);
             var workerData = {
                 message: 'setSize',
                 w: w,
@@ -753,7 +745,6 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         };
 
         LifeWorkerService.prototype.clear = function clear() {
-            this._buffer[this._fillSlotIndex] = [];
             var workerData = {
                 message: 'clear'
             };
@@ -761,7 +752,6 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         };
 
         LifeWorkerService.prototype.fillRandom = function fillRandom() {
-            this.clear();
             var workerData = {
                 message: 'fillRandom'
             };
@@ -777,7 +767,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         };
 
         LifeWorkerService.prototype.addCell = function addCell(xy) {
-            var cells = this._buffer[this._fillSlotIndex];
+            var cells = this._buffer;
             if (xy) {
                 cells.push(xy);
             }
@@ -790,7 +780,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
 
         LifeWorkerService.prototype.getGeneration = function getGeneration() {
             var workerData = {
-                message: 'resume'
+                message: 'step'
             };
             this.wrkr.postMessage(workerData);
         };
@@ -798,10 +788,7 @@ define('resources/services/life-worker-service',['exports', 'aurelia-framework',
         _createClass(LifeWorkerService, [{
             key: 'cells',
             get: function get() {
-                var i = this._getSlotIndex;
-                this._getSlotIndex = 1 - this._getSlotIndex;
-                this.getGeneration();
-                return this._buffer[i];
+                return this._buffer;
             }
         }]);
 

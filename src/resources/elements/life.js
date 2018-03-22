@@ -63,7 +63,7 @@ export class LifeCustomElement {
     }
 
     animateStep() {
-        this.drawCells();
+        this.drawCells(true);
         if (this.running && !this.stable) {
             setTimeout(() => { this.animateStep(); }, this.speedInterval);
         } else {
@@ -71,7 +71,8 @@ export class LifeCustomElement {
         }
     }
 
-    drawCells() {
+    drawCells(generate) {
+        if (generate) this.lfWs.getGeneration();
         let cells = this.lfWs.cells;
         const cellSize = this.cellSize;
         const offScreen = this.ctxOffscreen;
@@ -125,6 +126,8 @@ export class LifeCustomElement {
         this.setSpaceSize();
         this.resetSteps();
         this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
+        this.subscribeOnFirstData();
+        this.lfWs.fillRandom();
     }
 
     setSpaceSize() {
@@ -150,7 +153,6 @@ export class LifeCustomElement {
         // this.clearSpace();
         this.resetSteps();
         this.lfWs.clear();
-        this.subscribeOnFirstData();
     }
 
     stop() {
@@ -196,7 +198,8 @@ export class LifeCustomElement {
             this.start();
         });
         this.ea.subscribe('step', () => {
-            this.drawCells();
+            this.lfWs.getGeneration();
+            this.subscribeOnFirstData();
         });
         this.ea.subscribe('fillRandom', () => {
             this.lfWs.fillRandom();
@@ -231,7 +234,6 @@ export class LifeCustomElement {
                 this.lfWs.changeRules(this.liferules);
             }
         });
-        this.subscribeOnFirstData();
     }
 
     attached() {

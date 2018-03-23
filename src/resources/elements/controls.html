@@ -16,11 +16,11 @@
            click.delegate="step()"></a>
         <a href="#"
            class="startnstopbutton"
-           title="Start and stop automatically"
+           class.bind="startPulsor ? 'pulsor' : ''"
+           title="Start … and stop automatically"
            click.delegate="startNstop()"><span></span></a>
         <a href="#"
            class="startbutton"
-           class.bind="startPulsor ? 'pulsor' : ''"
            title="Start"
            click.delegate="start()"></a>
         <a href="#"

@@ -39,6 +39,7 @@ export class SettingsCustomElement {
             { rule: "235678/3678", name: "Stains" },
             { rule: "2345/45678", name: "Walled Cities" },
         ];
+        this.grid = false;
         this.trails = true;
         this.cellSizeExp = 1;
         this.minCellSize = 0;
@@ -52,6 +53,10 @@ export class SettingsCustomElement {
 
     toggleTrails() {
         this.ea.publish('toggleTrails', this.trails);
+    }
+
+    toggleGrid() {
+        this.ea.publish('toggleGrid', this.grid);
     }
 
     setCellSize() {

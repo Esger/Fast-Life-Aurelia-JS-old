@@ -9,7 +9,7 @@ import { LifeWorkerService } from 'resources/services/life-worker-service';
 @inject(EventAggregator, LifeWorkerService)
 export class LifeCustomElement {
 
-    speedHandle = null;
+    statusUpdateHandle = null;
 
     // TODO try this https://hacks.mozilla.org/2011/12/faster-canvas-pixel-manipulation-with-typed-arrays/
     constructor(eventAggregator, lifeWorkerService) {
@@ -18,15 +18,18 @@ export class LifeCustomElement {
         this.cellSize = 2;
         this.cellsAlive = 0;
         this.liferules = [];
+        this.speedInterval = 0;
         this.trails = true;
         this.running = false;
         this.opacity = 1 - this.trails * 0.9;
         this.cellCounts = [];
         this.lastMean = 0;
         this.stableCountDown = 20;
+        this.grid = false;
     }
 
     showStats() {
+        // todo use performance.now()
         let speed = this.lifeSteps - this.prevSteps;
         this.prevSteps = this.lifeSteps;
         this.ea.publish('stats', {
@@ -39,6 +42,8 @@ export class LifeCustomElement {
     clearSpace() {
         this.ctx.fillStyle = "rgb(255, 255, 255)";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctxOffscreen.fillStyle = "rgb(255, 255, 255)";
+        this.ctxOffscreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
     get meanOver100Gens() {
@@ -57,33 +62,54 @@ export class LifeCustomElement {
         return this.stableCountDown <= 0;
     }
 
-    animateStep() {
-        this.drawCells();
-        if (this.running && !this.stable) {
-            setTimeout(() => { this.animateStep(); });
+    animateStep(checkStable) {
+        this.drawCells(true);
+        if (this.running && (!this.stable && checkStable || !checkStable)) {
+            setTimeout(() => { this.animateStep(checkStable); }, this.speedInterval);
         } else {
             this.stop();
         }
     }
 
-    drawCells() {
+    drawCells(generate) {
+        if (generate) this.lfWs.getGeneration();
         let cells = this.lfWs.cells;
         const cellSize = this.cellSize;
         const offScreen = this.ctxOffscreen;
-        if (cells) {
-            offScreen.fillStyle = "rgba(255, 255, 255, " + this.opacity + ")";
-            offScreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        offScreen.fillStyle = "rgba(255, 255, 255, " + this.opacity + ")";
+        offScreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        if (this.grid) {
+            this.drawgrid();
+        }
+        offScreen.fillStyle = "rgba(128, 128, 0, 1)";
+        let i = cells.length - 1;
+        while (i >= 0) {
+            let cell = cells[i]; i -= 1;
+            offScreen.fillRect(cell[0] * cellSize, cell[1] * cellSize, cellSize, cellSize);
+        }
+        this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
+        this.cellsAlive = cells.length;
+        this.lifeSteps += 1;
+    }
 
-            offScreen.fillStyle = "rgba(128, 128, 0, 1)";
-            let i = cells.length - 1;
-            while (i >= 0) {
-                let cell = cells[i]; i -= 1;
-                offScreen.fillRect(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize);
+    drawgrid(onScreen) {
+        const offScreen = this.ctxOffscreen;
+        const cellSize = Math.max(this.cellSize, 4);
+        const maxX = this.canvas.width - cellSize;
+        const maxY = this.canvas.height - cellSize;
+        const step = cellSize * 2;
+        offScreen.fillStyle = "rgba(128, 128, 128, 0.1)";
+        let y = 0;
+        let oddStep = 0;
+        for (; y < maxY; y += cellSize) {
+            let x = oddStep;
+            oddStep = (oddStep + cellSize) % step;
+            for (; x < maxX; x += step) {
+                offScreen.fillRect(x, y, cellSize, cellSize);
             }
-
+        }
+        if (onScreen) {
             this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
-            this.cellsAlive = cells.length;
-            this.lifeSteps += 1;
         }
     }
 
@@ -93,43 +119,84 @@ export class LifeCustomElement {
         this.ctx = this.canvas.getContext('2d');
         this.canvasWidth = this.canvas.width;
         this.canvasHeight = this.canvas.height;
-        this.spaceWidth = Math.floor(this.canvasWidth / this.cellSize);
-        this.spaceHeight = Math.floor(this.canvasHeight / this.cellSize);
-
         this.offScreenCanvas = document.createElement('canvas');
         this.offScreenCanvas.width = this.canvasWidth;
         this.offScreenCanvas.height = this.canvasHeight;
         this.ctxOffscreen = this.offScreenCanvas.getContext('2d');
+        this.setSpaceSize();
+        this.resetSteps();
+        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
+        this.subscribeOnFirstData();
+        this.lfWs.fillRandom();
+    }
+
+    setSpaceSize() {
+        this.spaceWidth = Math.floor(this.canvasWidth / this.cellSize);
+        this.spaceHeight = Math.floor(this.canvasHeight / this.cellSize);
+    }
+
+    resetSteps() {
         this.lifeSteps = 0; // Number of iterations / steps done
         this.prevSteps = 0;
-        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
-        this.stop();
-        this.speedHandle = setInterval(() => { this.showStats(); }, 500);
+    }
+
+    slowDown() {
+        this.speedWas = this.speedInterval;
+        this.speedInterval = 500;
+    }
+
+    fullSpeed() {
+        this.speedInterval = this.speedWas;
     }
 
     clear() {
-        this.running = false;
         this.stop();
-        this.initLife();
-        this.clearSpace();
+        // this.clearSpace();
+        this.resetSteps();
+        this.lfWs.clear();
     }
 
     stop() {
         this.running = false;
-        if (this.speedHandle) {
-            clearInterval(this.speedHandle);
-            this.speedHandle = null;
+        if (this.statusUpdateHandle) {
+            clearInterval(this.statusUpdateHandle);
+            this.statusUpdateHandle = null;
         }
     }
 
     start() {
         this.running = true;
-        this.animateStep();
+        this.animateStep(false);
+        this.statusUpdateHandle = setInterval(() => { this.showStats(); }, 500);
+    }
+
+    startNstop() {
+        this.running = true;
+        this.animateStep(true); // true checks for stable life
+        this.statusUpdateHandle = setInterval(() => { this.showStats(); }, 500);
+    }
+
+    subscribeOnFirstData() {
+        this.ea.subscribeOnce('dataReady', () => {
+            this.drawCells();
+        });
+    }
+
+    addCell(event) {
+        const mouseX = (event.offsetX) ? event.offsetX : (event.pageX - this.offsetLeft);
+        const realX = Math.floor(mouseX / this.cellSize);
+        const mouseY = (event.offsetY) ? event.offsetY : (event.pageY - this.offsetTop);
+        const realY = Math.floor(mouseY / this.cellSize);
+        this.ctx.fillStyle = "#d4d4d4";
+        this.ctx.fillRect(realX * this.cellSize, realY * this.cellSize, this.cellSize, this.cellSize);
+        this.subscribeOnFirstData();
+        this.lfWs.addCell([realX, realY]);
     }
 
     addListeners() {
         this.ea.subscribe('clear', () => {
             this.clear();
+            this.subscribeOnFirstData();
         });
         this.ea.subscribe('stop', () => {
             this.stop();
@@ -137,20 +204,41 @@ export class LifeCustomElement {
         this.ea.subscribe('start', () => {
             this.start();
         });
+        this.ea.subscribe('startNstop', () => {
+            this.startNstop();
+        });
         this.ea.subscribe('step', () => {
-            this.drawCells();
+            this.lfWs.getGeneration();
+            this.subscribeOnFirstData();
+        });
+        this.ea.subscribe('fillRandom', () => {
+            this.lfWs.fillRandom();
+            this.subscribeOnFirstData();
+        });
+        this.ea.subscribe('timeoutInterval', response => {
+            this.speedInterval = response;
         });
         this.ea.subscribe('toggleTrails', () => {
             this.trails = !this.trails;
             this.opacity = 1 - this.trails * 0.9;
         });
+        this.ea.subscribe('toggleGrid', () => {
+            this.grid = !this.grid;
+            if (this.grid) {
+                this.drawgrid(true);
+            }
+        });
         this.ea.subscribe('cellSize', response => {
             this.cellSize = response;
-            this.initLife();
+            // todo no re-init; chop off superfluous
+            this.setSpaceSize();
+            this.lfWs.resize(this.spaceWidth, this.spaceHeight);
+            this.subscribeOnFirstData();
         });
         this.ea.subscribe('lifeRules', response => {
             this.liferules = response.liferules;
             if (response.init) {
+                // this.stop();
                 this.initLife();
             } else {
                 this.lfWs.changeRules(this.liferules);
@@ -161,6 +249,5 @@ export class LifeCustomElement {
     attached() {
         this.addListeners();
     }
-
 
 }

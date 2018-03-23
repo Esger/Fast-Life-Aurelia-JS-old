@@ -19,27 +19,20 @@ var conway = {
         return flatCells;
     },
 
-    ignite: function (w, h, liferules) {
+    init: function (w, h, liferules) {
+        conway.setSize(w, h);
+        conway.liferules = liferules;
+        conway.neighbours = conway.fillZero();
+    },
+
+    setSize: function (w, h) {
         conway.spaceWidth = w;
         conway.spaceHeight = h;
-        conway.liferules = liferules;
         conway.numberCells = conway.spaceWidth * conway.spaceHeight;
         conway.startnumberLivecells = conway.numberCells * conway.fillRatio;
         conway.cellsAlive = conway.startnumberLivecells;
-        conway.neighbours = conway.fillZero();
-        conway.liveCells = conway.fillRandom();
-        conway.sendScreen();
     },
 
-    // Put new pair of values in array
-    celXY: function (x, y) {
-        return {
-            x: x,
-            y: y
-        };
-    },
-
-    // Fill liveCells with random cellxy's
     fillRandom: function () {
         let cells = [];
         let y = 0;
@@ -47,14 +40,17 @@ var conway = {
             let x = 0;
             for (; x < conway.spaceWidth; x += 1) {
                 if (Math.random() < conway.fillRatio) {
-                    cells.push(conway.celXY(x, y));
+                    cells.push([x, y]);
                 }
             }
         }
         return cells;
     },
 
-    // Set all neighbours to zero
+    setCells: function (cells) {
+        conway.liveCells = cells;
+    },
+
     zeroNeighbours: function () {
         const count = conway.numberCells;
 
@@ -73,8 +69,8 @@ var conway = {
 
         let i = 0;
         for (; i < count; i += 1) {
-            let thisx = conway.liveCells[i].x;
-            let thisy = conway.liveCells[i].y;
+            let thisx = conway.liveCells[i][0];
+            let thisy = conway.liveCells[i][1];
             let dy = -rowLength;
             for (; dy <= rowLength; dy += rowLength) {
                 let yEff = thisy * rowLength + dy;
@@ -99,25 +95,24 @@ var conway = {
                 let y = Math.floor(i / rowLength);
                 let x = i % rowLength;
                 // let x = i - (y * rowLength);
-                conway.liveCells.push(conway.celXY(x, y));
+                conway.liveCells.push([x, y]);
             }
         }
     },
 
-    sendScreen: function () {
+    sendScreen: function (message) {
         let workerData = {
-            message: 'newGeneration',
+            message: message,
             cells: conway.liveCells
         };
         postMessage(workerData);
     },
 
-    // Animation function
-    bugLifeStep: function () {
+    step: function () {
         conway.zeroNeighbours();
         conway.updateNeighbours();
         conway.evalNeighbours();
-        conway.sendScreen();
+        conway.sendScreen('generation');
         conway.lifeSteps += 1;
     }
 
@@ -129,13 +124,34 @@ onmessage = function (e) {
         let data = e.data;
         switch (message) {
             case 'initialize':
-                conway.ignite(data.w, data.h, data.liferules);
+                conway.init(data.w, data.h, data.liferules);
                 break;
-            case 'resume':
-                conway.bugLifeStep();
+            case 'setSize':
+                conway.setSize(data.w, data.h);
+                conway.sendScreen('setSize');
+                break;
+            case 'addCell':
+                conway.addCell(data.cell);
+                conway.sendScreen('addCell');
+                break;
+            case 'fillRandom':
+                conway.liveCells = conway.fillRandom();
+                conway.sendScreen('fillRandom');
+                break;
+            case 'setCells':
+                conway.setCells(data.cells);
+                conway.sendScreen('setCells');
+                break;
+            case 'step':
+                conway.step();
                 break;
             case 'rules':
                 conway.liferules = data.rules;
+                break;
+            case 'clear':
+                conway.liveCells = [];
+                conway.neighbours = conway.fillZero();
+                conway.sendScreen('clear');
                 break;
             default:
         }

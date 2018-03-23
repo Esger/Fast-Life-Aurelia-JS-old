@@ -34,11 +34,10 @@
 
     <tab-content class="lifeRules">
         <row-labels>
-            <p title="Preset life rules">Cell size</p>
+            <p title="Change cell size and toggle trails">Cell size</p>
         </row-labels>
         <life-rules>
-            <input class="cellSize"
-                   type="range"
+            <input type="range"
                    title="cell size ${cellSize}"
                    min.one-time="minCellSize"
                    max.one-time="maxCellSize"
@@ -50,8 +49,12 @@
                    type="checkbox"
                    checked.bind="trails"
                    change.delegate="toggleTrails()" />
-            <label class="trails"
-                   for="trails"> Trails</label>
+            <label for="trails"> Trails</label>
+            <input id="grid"
+                   type="checkbox"
+                   checked.bind="grid"
+                   change.delegate="toggleGrid()" />
+            <label for="grid"> Grid</label>
 
         </life-rules>
     </tab-content>

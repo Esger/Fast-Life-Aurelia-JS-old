@@ -15,16 +15,24 @@ controls {
             background-color: transparent;
         }
 
-        [class*=button] {
+        [class*='button'] {
             margin-right: 10px;
         }
 
-        .clearbutton {
+        [type='range'] {
+            margin: 0;
+        }
+
+        .button() {
             width        : 20px;
             height       : 20px;
             border-radius: 2px;
-            box-sizing   : border-box;
-            border       : 2px solid #8a8a00;
+        }
+
+        .clearbutton {
+            .button;
+            box-sizing: border-box;
+            border    : 2px solid #8a8a00;
 
             &.pulsor::before {
                 content      : '';
@@ -41,7 +49,7 @@ controls {
             }
         }
 
-        .startbutton {
+        .startbutton, .startnstopbutton {
             position: relative;
             width   : 33px;
 
@@ -71,10 +79,26 @@ controls {
 
         }
 
+        .startnstopbutton {
+            display        : flex;
+            justify-content: flex-end;
+
+            span {
+                flex            : 0 0 2px;
+                content         : '';
+                background-color: #8a8a00;
+
+            }
+
+            &:hover span {
+                background-color: whitesmoke;
+            }
+            width          : 31px;
+
+        }
+
         .stopbutton {
-            width           : 20px;
-            height          : 20px;
-            border-radius   : 2px;
+            .button;
             box-sizing      : border-box;
             border          : 2px solid #8a8a00;
             background-color: #8a8a00;
@@ -97,13 +121,22 @@ controls {
             }
         }
 
+        .randombutton {
+            .button;
+            background-image: url("random-button.svg");
+
+            &:hover {
+                background-position: -20px 0;
+            }
+        }
+
         .trails {
             margin-left: 20px;
         }
 
         .pulsor:not(:hover), .pulsor:not(:hover)::after, .pulsor:not(:hover)::before {
             box-shadow: 0 0 30px whitesmoke;
-            -animation: pulsate 1s infinite alternate;
+            animation : pulsate .3s infinite alternate;
         }
         @keyframes pulsate {
             from {

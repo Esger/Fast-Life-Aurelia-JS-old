@@ -38,6 +38,7 @@ export class SettingsCustomElement {
             { rule: "/234", name: "Serviettes" },
             { rule: "235678/3678", name: "Stains" },
             { rule: "2345/45678", name: "Walled Cities" },
+            { rule: "1/12", name: "Sierpinski" }
         ];
         this.grid = false;
         this.trails = true;

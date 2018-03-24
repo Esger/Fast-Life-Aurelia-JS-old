@@ -26,16 +26,25 @@ export class LifeCustomElement {
         this.lastMean = 0;
         this.stableCountDown = 20;
         this.grid = false;
+        this.before = performance.now();
+        this.now = performance.now();
+        this.deltaTime = this.now - this.before;
+        this.lifeSteps = 0;
+        this.prevSteps = this.lifeSteps;
     }
 
     showStats() {
-        // todo use performance.now()
-        let speed = this.lifeSteps - this.prevSteps;
+        this.before = this.now;
+        this.now = performance.now();
+        this.deltaTime = this.now - this.before;
+        let steps = this.lifeSteps - this.prevSteps;
         this.prevSteps = this.lifeSteps;
+
+        let speed = Math.floor(1000 * steps / this.deltaTime);
         this.ea.publish('stats', {
             cellCount: this.cellsAlive,
             generations: this.lifeSteps,
-            speed: speed * 2
+            speed: speed
         });
     }
 
@@ -151,7 +160,6 @@ export class LifeCustomElement {
 
     clear() {
         this.stop();
-        // this.clearSpace();
         this.resetSteps();
         this.lfWs.clear();
     }
@@ -159,8 +167,10 @@ export class LifeCustomElement {
     stop() {
         this.running = false;
         if (this.statusUpdateHandle) {
-            clearInterval(this.statusUpdateHandle);
-            this.statusUpdateHandle = null;
+            setTimeout(() => {
+                clearInterval(this.statusUpdateHandle);
+                this.statusUpdateHandle = null;
+            }, 333);
         }
     }
 

@@ -1,3 +1,4 @@
+    <h1>Fast Life</h1>
     <h2>Pushing Aurelia JS to speed</h2>
     <p>Conway's Game Of Life has been a vehicle to learn new things to me for many years; here I&rsquo;m experimenting to see if Aurelia can match a <a href="/graylife"
            target="_blank">Vanilla js version</a> &mdash; It does. Take look at <a href="https://nl.wikipedia.org/wiki/Game_of_Life"
@@ -6,7 +7,8 @@
     <h2>Features</h2>
     <ul>
         <li>Easy buttons to experiment with the rules</li>
-        <li>Rule presets that sync with your own settings if there&rsquo;s a match</li>
+        <li>Rule presets that sync with your own settings - if there&rsquo;s a match</li>
+        <li>Adjustable cell size</li>
         <li>Draw cells yourself</li>
         <li>Optional &lsquo;trails&rsquo; to smooth things out</li>
         <li>Slow life with slider or hover over the canvas</li>

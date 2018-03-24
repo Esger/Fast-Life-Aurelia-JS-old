@@ -240,7 +240,6 @@ export class LifeCustomElement {
         });
         this.ea.subscribe('cellSize', response => {
             this.cellSize = response;
-            // todo no re-init; chop off superfluous
             this.setSpaceSize();
             this.lfWs.resize(this.spaceWidth, this.spaceHeight);
             this.subscribeOnFirstData();
@@ -248,7 +247,6 @@ export class LifeCustomElement {
         this.ea.subscribe('lifeRules', response => {
             this.liferules = response.liferules;
             if (response.init) {
-                // this.stop();
                 this.initLife();
             } else {
                 this.lfWs.changeRules(this.liferules);

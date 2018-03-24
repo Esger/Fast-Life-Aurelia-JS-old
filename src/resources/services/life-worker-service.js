@@ -20,7 +20,6 @@ export class LifeWorkerService {
     }
 
     get cells() {
-        // this.getGeneration(); // send request for new generation
         return this._buffer;
     }
 
@@ -28,7 +27,6 @@ export class LifeWorkerService {
         this.wrkr = new Worker('./assets/life-worker.js');
         this._buffer = [];
         this.wrkr.onmessage = (e) => {
-            // receive cells array and store it in the stack at the previous generation
             this._buffer = e.data.cells || [];
             this.ea.publish('dataReady');
         };

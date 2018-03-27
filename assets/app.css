@@ -279,14 +279,14 @@ row-labels p {
   letter-spacing: 1px;
   text-transform: uppercase;
 }
-h2 {
+story h2 {
   font-weight: bold;
   margin: 20px 0 10px;
 }
-p {
+story p {
   line-height: 20px;
 }
-ul {
+story ul {
   margin: 0 0 20px 20px;
 }
 tabs {
@@ -431,7 +431,7 @@ section {
   display: block;
 }
 body {
-  height: 100vh;
+  height: 100%;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;

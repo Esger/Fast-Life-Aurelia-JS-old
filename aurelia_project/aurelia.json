@@ -32,6 +32,8 @@
             ".css"
         ],
         "source": [
+            "src/resources/**/*.less",
+            "src/rewources/**/*.css",
             "src/**/*.less",
             "src/**/*.css"
         ]

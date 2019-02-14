@@ -1,3 +1,4 @@
+// Plain JS object - no Aurelia
 var conway = {
     gogogo: null,
     cellsAlive: 0, // Number of cells alive
@@ -11,7 +12,7 @@ var conway = {
 
     fillZero: function () {
         const cellCount = conway.spaceWidth * conway.spaceHeight;
-        let flatCells = [];
+        let flatCells = []; // one dimensional array with the cells to count the neighbours
         let y = 0;
         for (; y < cellCount; y += 1) {
             flatCells.push(0);

@@ -64,6 +64,10 @@ export class SettingsCustomElement {
         this.ea.publish('cellSize', this.cellSize);
     }
 
+    toggleDynaLife() {
+        this.ea.publish('toggleDynaLife');
+    }
+
     setPreset() {
         if (this.selectedPreset > 0) {
             let rulesSet = this.presets[this.selectedPreset].rule.split('/');

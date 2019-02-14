@@ -1,6 +1,7 @@
 life-rules {
     display  : flex;
     flex-wrap: wrap;
+    width    : 100%;
 
     [type=checkbox]+label {
         min-width: 30px;
@@ -15,6 +16,11 @@ row-labels p {
 
 life-rule, row-labels p {
     margin-bottom: 10px;
+}
+
+#dynaLife+label {
+    justify-self: flex-end;
+    margin-left : auto;
 }
 
 .lifeRules {

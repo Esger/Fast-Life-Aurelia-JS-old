@@ -55,15 +55,15 @@ export class LifeCustomElement {
         this.ctxOffscreen.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
-    get meanOver100Gens() {
+    getMeanOver100Gens() {
         this.cellCounts.push(this.cellsAlive);
         this.cellCounts = this.cellCounts.slice(-100);
         const average = arr => arr.reduce((p, c) => p + c, 0) / arr.length;
         return average(this.cellCounts);
     }
 
-    get stable() {
-        if (Math.abs(this.meanOver100Gens - this.cellsAlive) < 7) {
+    stable() {
+        if (Math.abs(this.getMeanOver100Gens() - this.cellsAlive) < 7) {
             this.stableCountDown -= 1;
         } else {
             this.stableCountDown = 20;
@@ -73,7 +73,7 @@ export class LifeCustomElement {
 
     animateStep(checkStable) {
         this.drawCells(true);
-        if (this.running && (!this.stable && checkStable || !checkStable)) {
+        if (this.running && (!this.stable() && checkStable || !checkStable)) {
             setTimeout(() => { this.animateStep(checkStable); }, this.speedInterval);
         } else {
             this.stop();

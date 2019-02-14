@@ -6,12 +6,18 @@
         </row-labels>
         <life-rules>
             <select change.delegate="setPreset()"
-                    value.bind="selectedPreset"> 
+                    value.bind="selectedPreset">
                 <option repeat.for="preset of presets"  
                     model.bind="$index" 
                     innerhtml.one-time="preset.name"> 
                 </option> 
             </select>
+            <input id="dynaLife"
+                type="checkbox"
+                checked.bind="dynaLife"
+                change.delegate="toggleDynaLife()" />
+            <label for="dynaLife"> dynaLife</label>
+
         </life-rules>
     </tab-content>
 

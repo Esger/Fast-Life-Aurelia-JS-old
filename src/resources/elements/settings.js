@@ -20,14 +20,13 @@ export class SettingsCustomElement {
             { rule: "1358/357", name: "Amoeba" },
             { rule: "4567/345", name: "Assimilation" },
             { rule: "235678/378", name: "Coagulations" },
-            { rule: "23/3", name: "Conway&rsquo;s Life" },
+            { rule: "23/3", name: "Conway&rsquo;s Life" }, // default
             { rule: "45678/3", name: "Coral" },
             { rule: "34678/3678", name: "Day &amp; Night" },
             { rule: "5678/35678", name: "Diamoeba" },
             { rule: "012345678/3", name: "Flakes" },
             { rule: "1/1", name: "Gnarl" },
             { rule: "23/36", name: "High Life" },
-            // { rule: "34678/0123478/2", name: "Inverse Life" }, 
             { rule: "5/345", name: "Long Life" },
             { rule: "12345/3", name: "Maze" },
             { rule: "1234/3", name: "Mazectric" },
@@ -66,7 +65,7 @@ export class SettingsCustomElement {
     }
 
     toggleDynaLife() {
-        this.ea.publish('toggleDynaLife');
+        this.ea.publish('toggleDynaLife', this.dynaLife);
     }
 
     setPreset() {
@@ -76,7 +75,7 @@ export class SettingsCustomElement {
             let newRulesString = rulesSet[1];
             let newRules = [];
             let i = 0;
-            for (let i = 0; i < 9; i++) {
+            for (; i < 9; i++) {
                 newRules[i] = newRulesString.includes(i);
                 newRules[i + 10] = stayRulesString.includes(i);
             }
@@ -88,6 +87,7 @@ export class SettingsCustomElement {
     publishRules(init) {
         this.ea.publish('lifeRules', {
             liferules: this.liferules,
+            dynaLife: this.dynaLife,
             init: init
         });
     }

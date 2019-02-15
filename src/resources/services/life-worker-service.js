@@ -23,8 +23,15 @@ export class LifeWorkerService {
         return this._buffer;
     }
 
-    init(w, h, liferules) {
-        this.wrkr = new Worker('./assets/life-worker.js');
+    init(w, h, liferules, dynaLife) {
+        if (this.wrkr) {
+            this.wrkr.terminate();
+        }
+        if (dynaLife) {
+            this.wrkr = new Worker('./assets/dyna-life-worker.js');
+        } else {
+            this.wrkr = new Worker('./assets/life-worker.js');
+        }
         this._buffer = [];
         this.wrkr.onmessage = (e) => {
             this._buffer = e.data.cells || [];

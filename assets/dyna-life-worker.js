@@ -2,7 +2,7 @@
 var conway = {
     gogogo: null,
     cellsAlive: 0, // Number of cells alive
-    fillRatio: 0.2, // Percentage of available cells that will be set alive initially (20)
+    fillRatio: 0.2, // Percentage of available cells that will be set alive initially (20%)
     liferules: [],
     numberCells: 0, // Number of available cells
     spaceHeight: 0,
@@ -12,10 +12,12 @@ var conway = {
 
     fillZero: function () {
         const cellCount = conway.spaceWidth * conway.spaceHeight;
-        let flatCells = []; // one dimensional array with the cells to count the neighbours
+        const neighbourCount = 0;
+        const rulesSum = 0;
+        const flatCells = []; // one dimensional array with the cells to count the neighbours
         let y = 0;
         for (; y < cellCount; y += 1) {
-            flatCells.push(0);
+            flatCells.push([neighbourCount, rulesSum, rulesSum]);
         }
         return flatCells;
     },
@@ -41,7 +43,9 @@ var conway = {
             let x = 0;
             for (; x < conway.spaceWidth; x += 1) {
                 if (Math.random() < conway.fillRatio) {
-                    cells.push([x, y]);
+                    let green = Math.round(Math.random() * 255);
+                    let blue = Math.round(Math.random() * 255);
+                    cells.push([x, y, green, blue]);
                 }
             }
         }
@@ -57,11 +61,14 @@ var conway = {
 
         let i = 0;
         for (; i < count; i += 1) {
-            conway.neighbours[i] = 0;
+            conway.neighbours[i] = [0, 0, 0];
         }
     },
 
     // Tell neighbours around livecells they have a neighbour
+    // And pass their rules in a rulesSum
+    // TODO: maybe apply neighbour liferules bitwise to calculate new liferules
+    // So the liferules define the inheritance of rules!
     updateNeighbours: function () {
         const count = conway.liveCells.length;
         const maxNeighbour = 2;
@@ -70,33 +77,57 @@ var conway = {
 
         let i = 0;
         for (; i < count; i += 1) {
-            let thisx = conway.liveCells[i][0];
-            let thisy = conway.liveCells[i][1];
+            const cell = conway.liveCells[i];
+            const x = cell[0];
+            const y = cell[1];
+            const stayRules = cell[2];
+            const newRules = cell[3];
             let dy = -rowLength;
             for (; dy <= rowLength; dy += rowLength) {
-                let yEff = thisy * rowLength + dy;
+                const yEff = y * rowLength + dy;
                 let dx = -1;
                 for (; dx < maxNeighbour; dx += 1) {
-                    conway.neighbours[(yEff + thisx + dx + cellCount) % cellCount] += 1;
+                    let neighbourIndex = (yEff + x + dx + cellCount) % cellCount;
+                    conway.neighbours[neighbourIndex][0] += 1; // +1 neighbour
+                    conway.neighbours[neighbourIndex][1] += stayRules;
+                    conway.neighbours[neighbourIndex][2] += newRules;
                 }
             }
-            conway.neighbours[thisy * rowLength + thisx] += 9;
+            conway.neighbours[y * rowLength + x][0] += 9; // for self is alive
         }
     },
 
+    // convert rounded number to array of booleans for each bit
+    toBoolArray: function (number) {
+        const boolArray = [];
+        let i = 0;
+        for (; i < 9; i++) {
+            const bool = number % 2 == 1;
+            number = Math.floor(number / 2);
+            boolArray.push(bool);
+        }
+        boolArray.push(false); // we want an array of 10 bools
+        return boolArray;
+    },
+
     // Evaluate neighbourscounts for new livecells
+    // And calc new averaged rules for them
+    // TODO: try calc new rules, then store them for next round, use current rules now
     evalNeighbours: function () {
         const count = conway.numberCells;
         const rowLength = conway.spaceWidth;
-        conway.liveCells = [];
+        conway.liveCells.length = 0;
 
         let i = 0;
         for (; i < count; i += 1) {
-            if (conway.liferules[conway.neighbours[i]]) {
+            const neighbourCount = conway.neighbours[i][0];
+            const stayRules = Math.round(conway.neighbours[i][1] / neighbourCount); // average
+            const newRules = Math.round(conway.neighbours[i][2] / neighbourCount);
+            const allRules = conway.toBoolArray(stayRules).concat(conway.toBoolArray(newRules));
+            if (allRules[neighbourCount]) {
                 let y = Math.floor(i / rowLength);
                 let x = i % rowLength;
-                // let x = i - (y * rowLength);
-                conway.liveCells.push([x, y]);
+                conway.liveCells.push([x, y, stayRules, newRules]);
             }
         }
     },
@@ -123,6 +154,7 @@ onmessage = function (e) {
     if (e && e.data && e.data.message) {
         let message = e.data.message;
         let data = e.data;
+        console.log(message);
         switch (message) {
             case 'initialize':
                 conway.init(data.w, data.h, data.liferules);
@@ -150,7 +182,7 @@ onmessage = function (e) {
                 conway.liferules = data.rules;
                 break;
             case 'clear':
-                conway.liveCells = [];
+                conway.liveCells.length = 0;
                 conway.neighbours = conway.fillZero();
                 conway.sendScreen('clear');
                 break;

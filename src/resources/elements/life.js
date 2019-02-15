@@ -31,6 +31,7 @@ export class LifeCustomElement {
         this.deltaTime = this.now - this.before;
         this.lifeSteps = 0;
         this.prevSteps = this.lifeSteps;
+        this.dynaLife = true;
     }
 
     showStats() {
@@ -94,6 +95,9 @@ export class LifeCustomElement {
         let i = cells.length - 1;
         while (i >= 0) {
             let cell = cells[i]; i -= 1;
+            if (this.dynaLife) {
+                offScreen.fillStyle = "rgba(" + cell[2] / 2 + ", " + cell[3] / 2 + ", 0, 1)";
+            }
             offScreen.fillRect(cell[0] * cellSize, cell[1] * cellSize, cellSize, cellSize);
         }
         this.ctx.drawImage(this.offScreenCanvas, 0, 0, this.canvasWidth, this.canvasHeight);
@@ -122,7 +126,7 @@ export class LifeCustomElement {
         }
     }
 
-    initLife() {
+    initLife(dynaLife) {
         this.opacity = 1 - this.trails * 0.9;
         this.canvas = document.getElementById('life');
         this.ctx = this.canvas.getContext('2d');
@@ -134,7 +138,7 @@ export class LifeCustomElement {
         this.ctxOffscreen = this.offScreenCanvas.getContext('2d');
         this.setSpaceSize();
         this.resetSteps();
-        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules);
+        this.lfWs.init(this.spaceWidth, this.spaceHeight, this.liferules, dynaLife);
         this.subscribeOnFirstData();
         this.lfWs.fillRandom();
     }
@@ -247,10 +251,14 @@ export class LifeCustomElement {
         this.ea.subscribe('lifeRules', response => {
             this.liferules = response.liferules;
             if (response.init) {
-                this.initLife();
+                this.initLife(response.dynaLife);
             } else {
                 this.lfWs.changeRules(this.liferules);
             }
+        });
+        this.ea.subscribe('toggleDynaLife', dynaLife => {
+            this.dynaLife = dynaLife;
+            this.initLife(dynaLife);
         });
     }
 

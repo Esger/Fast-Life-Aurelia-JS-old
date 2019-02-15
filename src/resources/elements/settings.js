@@ -42,6 +42,7 @@ export class SettingsCustomElement {
         ];
         this.grid = false;
         this.trails = true;
+        this.dynaLife = true;
         this.cellSizeExp = 1;
         this.minCellSize = 0;
         this.maxCellSize = 5;

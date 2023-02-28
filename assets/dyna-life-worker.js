@@ -65,6 +65,28 @@ var conway = {
         }
     },
 
+    cumulateRules: function (neighbourIndex, stayRules, newRules) {
+        const neighbour = conway.neighbours[neighbourIndex];
+        const rules = [stayRules, newRules];
+        const cumulatedRules = [neighbour[0], neighbour[0]];
+        let j = 0;
+        for (; j < 2; j++) {
+            let cumulator = 1;
+            // each digit of cumulatedRules cumulates ruleBits
+            // in order to apply rules to each digit to generate new ruleDigits from
+            // whoooaaa -> count bits of surrounding rules into one number in which each
+            // digit represents a bitcount
+            let i = 0;
+            for (; i < 9; i++) {
+                if (rules[j] % 2 == 1) {
+                    cumulatedRules[j] += cumulator;
+                }
+                cumulator *= 10;
+                rules[j] = Math.floor(rules[j] / 2);
+            }
+        }
+    },
+
     // Tell neighbours around livecells they have a neighbour
     // And pass their rules in a rulesSum
     // TODO: maybe apply neighbour liferules bitwise to calculate new liferules
@@ -89,8 +111,8 @@ var conway = {
                 for (; dx < maxNeighbour; dx += 1) {
                     let neighbourIndex = (yEff + x + dx + cellCount) % cellCount;
                     conway.neighbours[neighbourIndex][0] += 1; // +1 neighbour
-                    conway.neighbours[neighbourIndex][1] += stayRules;
-                    conway.neighbours[neighbourIndex][2] += newRules;
+                    cumulateRules(neighbourIndex, stayRules);
+                    cumulateRules(neighbourIndex, newRules);
                 }
             }
             conway.neighbours[y * rowLength + x][0] += 9; // for self is alive
@@ -124,6 +146,9 @@ var conway = {
             const stayRules = Math.round(conway.neighbours[i][1] / neighbourCount); // average
             const newRules = Math.round(conway.neighbours[i][2] / neighbourCount);
             const allRules = conway.toBoolArray(stayRules).concat(conway.toBoolArray(newRules));
+            allRules[10] = false;
+            allRules[11] = false;
+            allRules[12] = false;
             if (allRules[neighbourCount]) {
                 let y = Math.floor(i / rowLength);
                 let x = i % rowLength;
